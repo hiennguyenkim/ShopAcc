@@ -1,0 +1,45 @@
+@media (max-width: 992px) {
+  .products-layout, .dashboard-wrapper {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-sidebar, .dashboard-sidebar {
+    width: 100%;
+  }
+  
+  nav {
+    display: none; /* simple mobile drawer can be added or links wrapped in dropdown */
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 10px 15px;
+  }
+  
+  .logo {
+    font-size: 1.3rem;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .data-table th, .data-table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+  
+  .detail-current-price {
+    font-size: 1.8rem;
+  }
+}

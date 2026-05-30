@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giỏ hàng - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .cart-layout {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 30px;
+    }
+    .cart-item {
+      display: grid;
+      grid-template-columns: 100px 1fr 120px 40px;
+      gap: 20px;
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      align-items: center;
+    }
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+    .cart-item-img {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Cart Page Layout -->
+  <div class="cart-layout">
+    
+    <!-- Left List of accounts -->
+    <div>
+      <div class="glass" style="padding: 20px;">
+        <h2 style="font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 10px;">Giỏ Hàng Của Bạn</h2>
+        <div id="cart-items-list">
+          <!-- loaded from localStorage -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Totals & Coupon -->
+    <aside>
+      <div class="glass" style="padding: 24px;">
+        <h3 style="font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tổng Đơn Hàng</h3>
+        
+        <!-- Coupon input -->
+        <div class="form-group" style="margin-top: 15px;">
+          <label for="coupon-input">Mã Giảm Giá (Coupon)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="coupon-input" class="form-control" placeholder="Mã ví dụ: GAME10">
+            <button id="apply-coupon-btn" class="btn btn-cyan" style="padding: 10px 16px;">Áp dụng</button>
+          </div>
+          <p id="coupon-status" style="font-size: 0.85rem; margin-top: 8px; font-weight: 500;"></p>
+        </div>
+
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+            <span>Tạm tính</span>
+            <span id="summary-subtotal">0đ</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; color: var(--accent-pink);">
+            <span>Giảm giá</span>
+            <span id="summary-discount">-0đ</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <span>Tổng cộng</span>
+            <span id="summary-total" class="glow-text-cyan">0đ</span>
+          </div>
+        </div>
+
+        <button id="proceed-checkout-btn" class="btn btn-cyan" style="width: 100%; margin-top: 24px; font-size: 1.05rem; padding: 12px 24px;">
+          Tiến Hành Thanh Toán 💳
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    let appliedCoupon = null;
+    let discountAmount = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCartItems();
+      document.getElementById('apply-coupon-btn').addEventListener('click', applyCouponCode);
+      document.getElementById('proceed-checkout-btn').addEventListener('click', proceedToCheckout);
+    });
+
+    function renderCartItems() {
+      const items = window.getCart();
+      const list = document.getElementById('cart-items-list');
+      list.innerHTML = '';
+
+      if (items.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 50px; color: var(--text-muted);">Giỏ hàng đang trống. Quay lại <a href="/products.html" style="color: var(--accent-cyan);">Cửa hàng</a> để chọn nick.</div>';
+        updateSummaries(0);
+        document.getElementById('proceed-checkout-btn').disabled = true;
+        return;
+      }
+
+      document.getElementById('proceed-checkout-btn').disabled = false;
+      let subtotal = 0;
+
+      items.forEach(item => {
+        subtotal += item.price;
+        const card = document.createElement('div');
+        card.className = 'cart-item';
+        card.innerHTML = `
+          <img src="${item.image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1470&auto=format&fit=crop'}" class="cart-item-img" alt="${item.name}">
+          <div>
+            <span style="color: var(--accent-cyan); font-size: 0.8rem; font-weight: bold;">MS: ${item.code}</span>
+            <h4 style="font-weight: 600; font-size: 1rem; cursor: pointer;" onclick="window.location.href='/product-detail.html?slug=${item.slug}'">${item.name}</h4>
+          </div>
+          <div style="font-weight: 700; color: white;">${item.price.toLocaleString('vi-VN')}đ</div>
+          <button class="btn-remove" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--error);">&times;</button>
+        `;
+
+        card.querySelector('.btn-remove').onclick = () => {
+          window.removeFromCart(item.accountId);
+          renderCartItems(); // Re-render
+          // Re-validate coupon if applied
+          if (appliedCoupon) {
+            applyCouponCode();
+          }
+        };
+
+        list.appendChild(card);
+      });
+
+      updateSummaries(subtotal);
+    }
+
+    function updateSummaries(subtotal) {
+      document.getElementById('summary-subtotal').textContent = `${subtotal.toLocaleString('vi-VN')}đ`;
+      
+      if (appliedCoupon) {
+        // Re-calculate based on subtotal
+        if (appliedCoupon.discountType === 'percent') {
+          discountAmount = Math.floor((subtotal * appliedCoupon.discountValue) / 100);
+        } else {
+          discountAmount = appliedCoupon.discountValue;
+        }
+        if (discountAmount > subtotal) discountAmount = subtotal;
+      } else {
+        discountAmount = 0;
+      }
+
+      document.getElementById('summary-discount').textContent = `-${discountAmount.toLocaleString('vi-VN')}đ`;
+      const finalTotal = subtotal - discountAmount;
+      document.getElementById('summary-total').textContent = `${finalTotal.toLocaleString('vi-VN')}đ`;
+    }
+
+    async function applyCouponCode() {
+      const code = document.getElementById('coupon-input').value.toUpperCase().trim();
+      const statusText = document.getElementById('coupon-status');
+      
+      const cart = window.getCart();
+      if (cart.length === 0) {
+        statusText.style.color = 'var(--error)';
+        statusText.textContent = 'Giỏ hàng đang trống.';
+        return;
+      }
+
+      const orderValue = cart.reduce((sum, item) => sum + item.price, 0);
+
+      try {
+        const res = await fetch('/api/coupons/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, orderValue })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          appliedCoupon = data.coupon;
+          statusText.style.color = 'var(--success)';
+          statusText.textContent = `Áp dụng thành công! Giảm -${data.discountAmount.toLocaleString('vi-VN')}đ`;
+          
+          // Store applied coupon code in session variable for checkout
+          sessionStorage.setItem('appliedCouponCode', code);
+
+          updateSummaries(orderValue);
+        } else {
+          appliedCoupon = null;
+          statusText.style.color = 'var(--error)';
+          statusText.textContent = data.message;
+          sessionStorage.removeItem('appliedCouponCode');
+          updateSummaries(orderValue);
+        }
+      } catch (err) {
+        console.error(err);
+        statusText.style.color = 'var(--error)';
+        statusText.textContent = 'Lỗi kết nối khi áp dụng mã.';
+      }
+    }
+
+    function proceedToCheckout() {
+      const cart = window.getCart();
+      if (cart.length === 0) return;
+
+      // Check if logged in first
+      fetch('/api/auth/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.user) {
+            window.location.href = '/checkout.html';
+          } else {
+            window.showToast('Vui lòng đăng nhập để tiến hành thanh toán.', 'warning');
+            setTimeout(() => {
+              window.location.href = '/login.html';
+            }, 1000);
+          }
+        });
+    }
+  </script>
+</body>
+</html>

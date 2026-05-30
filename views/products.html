@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cửa hàng Nick Game - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html" class="glow-text-cyan">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Products Main Layout -->
+  <div class="products-layout">
+    
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar glass">
+      <div class="filter-section">
+        <h3 class="filter-title">Tìm kiếm</h3>
+        <input type="text" id="search-input" class="form-control" placeholder="Mã nick, tên...">
+      </div>
+
+      <div class="filter-section">
+        <h3 class="filter-title">Loại Game</h3>
+        <div class="filter-options">
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="" checked style="width: auto;"> Tất cả game
+          </label>
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="lien_quan" style="width: auto;"> Liên Quân Mobile
+          </label>
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="free_fire" style="width: auto;"> Free Fire
+          </label>
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="fifa_mobile" style="width: auto;"> FIFA Mobile
+          </label>
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="lol" style="width: auto;"> League of Legends
+          </label>
+          <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="gameType" value="pubg" style="width: auto;"> PUBG Mobile
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h3 class="filter-title">Khoảng Giá</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="number" id="min-price" class="form-control" placeholder="Từ" min="0">
+          <span>-</span>
+          <input type="number" id="max-price" class="form-control" placeholder="Đến" min="0">
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h3 class="filter-title">Hạng (Rank)</h3>
+        <select id="rank-filter" class="form-control">
+          <option value="">Tất cả Rank</option>
+          <option value="Đồng">Đồng</option>
+          <option value="Bạc">Bạc</option>
+          <option value="Vàng">Vàng</option>
+          <option value="Bạch Kim">Bạch Kim</option>
+          <option value="Kim Cương">Kim Cương</option>
+          <option value="Tinh Anh">Tinh Anh</option>
+          <option value="Cao Thủ">Cao Thủ</option>
+          <option value="Thách Đấu">Thách Đấu</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <h3 class="filter-title">Sắp Xếp</h3>
+        <select id="sort-select" class="form-control">
+          <option value="">Mặc định (Mới nhất)</option>
+          <option value="price_asc">Giá tăng dần</option>
+          <option value="price_desc">Giá giảm dần</option>
+          <option value="newest">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+        </select>
+      </div>
+
+      <button id="apply-filters-btn" class="btn btn-cyan" style="width: 100%;">
+        Áp Dụng Bộ Lọc ⚡
+      </button>
+    </aside>
+
+    <!-- Listings Grid -->
+    <main>
+      <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-weight: 700;">Danh Sách Nick</h2>
+        <span id="results-count" style="color: var(--text-muted); font-size: 0.9rem;">Đang tải...</span>
+      </div>
+      <div id="products-list-grid" class="products-grid">
+        <!-- populated dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    let currentPage = 1;
+    let initialCategoryId = '';
+    let userWishlist = [];
+
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    async function loadWishlist() {
+      try {
+        const res = await fetch('/api/wishlist');
+        const data = await res.json();
+        if (data.success && data.wishlist) {
+          userWishlist = data.wishlist.map(w => w._id || w);
+        }
+      } catch (err) {
+        // user not logged in or network error, ignore
+      }
+    }
+
+    function buildQueryString() {
+      const search = document.getElementById('search-input').value.trim();
+      const minPrice = document.getElementById('min-price').value;
+      const maxPrice = document.getElementById('max-price').value;
+      const sort = document.getElementById('sort-select').value;
+      const rank = document.getElementById('rank-filter').value;
+      
+      const gameTypeEl = document.querySelector('input[name="gameType"]:checked');
+      const gameType = gameTypeEl ? gameTypeEl.value : '';
+
+      const params = new URLSearchParams();
+      params.set('status', 'available');
+      params.set('page', currentPage);
+      params.set('limit', 12);
+
+      if (search) params.set('search', search);
+      if (minPrice) params.set('minPrice', minPrice);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (sort) params.set('sort', sort);
+      if (rank) params.set('rank', rank);
+      if (gameType) params.set('gameType', gameType);
+      if (initialCategoryId) params.set('category', initialCategoryId);
+
+      return params.toString();
+    }
+
+    async function fetchProducts() {
+      try {
+        const grid = document.getElementById('products-list-grid');
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px;">Đang tìm kiếm tài khoản thích hợp...</div>';
+
+        await loadWishlist();
+
+        const queryString = buildQueryString();
+        const res = await fetch(`/api/game-accounts?${queryString}`);
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('results-count').textContent = `Tìm thấy ${data.total} nick game`;
+          grid.innerHTML = '';
+
+          if (data.accounts.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-muted);">Không tìm thấy tài khoản phù hợp với bộ lọc hiện tại.</div>';
+            renderPagination(0);
+            return;
+          }
+
+          data.accounts.forEach(acc => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+
+            const gameTypeNames = {
+              lien_quan: 'Liên Quân',
+              free_fire: 'Free Fire',
+              fifa_mobile: 'FIFA Mobile',
+              lol: 'LMHT',
+              pubg: 'PUBG'
+            };
+
+            card.innerHTML = `
+              <div class="product-img-wrapper" style="position: relative;">
+                <img src="${acc.images[0] || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1470&auto=format&fit=crop'}" class="product-img" alt="${acc.name}" onclick="window.location.href='/product-detail.html?slug=${acc.slug}'" style="cursor: pointer;">
+                <span class="game-badge">${gameTypeNames[acc.gameType] || acc.gameType}</span>
+                <button class="wishlist-btn" data-id="${acc._id}" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: transform 0.2s;">
+                  ${userWishlist.includes(acc._id) ? '❤️' : '🤍'}
+                </button>
+              </div>
+              <div class="product-info">
+                <span class="product-code">MS: ${acc.code}</span>
+                <h3 class="product-title" onclick="window.location.href='/product-detail.html?slug=${acc.slug}'" style="cursor: pointer;">${acc.name}</h3>
+                <div class="product-attributes">
+                  <div class="attribute-item">🏆 Rank: ${acc.rank || 'N/A'}</div>
+                  <div class="attribute-item">⭐ Level: ${acc.level || 'N/A'}</div>
+                  <div class="attribute-item">🌐 SV: ${acc.server || 'Asia'}</div>
+                  <div class="attribute-item">🛡️ BH: ${acc.warrantyDays || 0} ngày</div>
+                </div>
+                <div class="product-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                  <div class="product-price-section">
+                    ${acc.oldPrice ? `<span class="old-price">${acc.oldPrice.toLocaleString('vi-VN')}đ</span>` : ''}
+                    <span class="current-price">${acc.price.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                  <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-outline btn-add-cart" style="padding: 6px 10px; font-size: 0.85rem;" title="Thêm vào giỏ">🛒</button>
+                    <button class="btn btn-cyan btn-buy" style="padding: 6px 12px; font-size: 0.85rem;">Mua ngay</button>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            card.querySelector('.btn-buy').onclick = () => {
+              handleBuyNow(acc._id);
+            };
+            card.querySelector('.btn-add-cart').onclick = () => {
+              window.addToCart(acc);
+            };
+            card.querySelector('.wishlist-btn').onclick = (e) => {
+              e.stopPropagation();
+              handleWishlistToggle(acc._id);
+            };
+
+            grid.appendChild(card);
+          });
+
+          renderPagination(data.totalPages);
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    }
+
+    async function handleBuyNow(accountId) {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.success && data.user) {
+          window.location.href = `/checkout.html?accountId=${accountId}&mode=buynow`;
+        } else {
+          window.showToast('Vui lòng đăng nhập để mua tài khoản.', 'warning');
+          setTimeout(() => {
+            window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+          }, 1000);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleWishlistToggle(accountId) {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (!data.success || !data.user) {
+          window.showToast('Đăng nhập để lưu yêu thích.', 'warning');
+          return;
+        }
+
+        const toggleRes = await fetch('/api/wishlist/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accountId })
+        });
+        const toggleData = await toggleRes.json();
+        if (toggleData.success) {
+          window.showToast(toggleData.message, 'success');
+          if (toggleData.action === 'added') {
+            userWishlist.push(accountId);
+          } else {
+            userWishlist = userWishlist.filter(id => id !== accountId);
+          }
+          const btn = document.querySelector(`.wishlist-btn[data-id="${accountId}"]`);
+          if (btn) {
+            btn.innerHTML = toggleData.action === 'added' ? '❤️' : '🤍';
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderPagination(totalPages) {
+      let pagContainer = document.getElementById('pagination-container');
+      if (!pagContainer) {
+        pagContainer = document.createElement('div');
+        pagContainer.id = 'pagination-container';
+        pagContainer.style.cssText = 'display: flex; justify-content: center; gap: 10px; margin-top: 30px; grid-column: 1 / -1;';
+        document.getElementById('products-list-grid').after(pagContainer);
+      }
+      
+      pagContainer.innerHTML = '';
+      if (totalPages <= 1) return;
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'btn btn-outline';
+      prevBtn.style.padding = '8px 16px';
+      prevBtn.textContent = '◀';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          fetchProducts();
+        }
+      };
+      pagContainer.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = i === currentPage ? 'btn btn-cyan' : 'btn btn-outline';
+        btn.style.padding = '8px 16px';
+        btn.textContent = i;
+        btn.onclick = () => {
+          currentPage = i;
+          fetchProducts();
+        };
+        pagContainer.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'btn btn-outline';
+      nextBtn.style.padding = '8px 16px';
+      nextBtn.textContent = '▶';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          fetchProducts();
+        }
+      };
+      pagContainer.appendChild(nextBtn);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      initialCategoryId = params.get('category') || '';
+
+      fetchProducts();
+
+      document.getElementById('apply-filters-btn').addEventListener('click', () => {
+        currentPage = 1;
+        fetchProducts();
+      });
+
+      document.querySelectorAll('input[name="gameType"]').forEach(el => {
+        el.addEventListener('change', () => {
+          initialCategoryId = '';
+          currentPage = 1;
+          fetchProducts();
+        });
+      });
+
+      document.getElementById('sort-select').addEventListener('change', () => {
+        currentPage = 1;
+        fetchProducts();
+      });
+
+      document.getElementById('rank-filter').addEventListener('change', () => {
+        currentPage = 1;
+        fetchProducts();
+      });
+
+      document.getElementById('min-price').addEventListener('change', () => {
+        currentPage = 1;
+        fetchProducts();
+      });
+      document.getElementById('max-price').addEventListener('change', () => {
+        currentPage = 1;
+        fetchProducts();
+      });
+
+      document.getElementById('search-input').addEventListener('input', debounce(() => {
+        currentPage = 1;
+        fetchProducts();
+      }, 400));
+    });
+  </script>
+</body>
+</html>

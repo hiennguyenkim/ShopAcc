@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liên hệ hỗ trợ - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .contact-layout {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html" class="glow-text-cyan">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contact Body -->
+  <div class="contact-layout">
+    
+    <!-- Info Column -->
+    <div class="glass" style="padding: 40px;">
+      <h2 class="glow-text-cyan" style="font-weight: 700; margin-bottom: 20px;">Liên Hệ Hỗ Trợ</h2>
+      <p style="color: var(--text-muted); margin-bottom: 30px;">Hệ thống chăm sóc khách hàng hoạt động 24/7. Mọi thắc mắc của quý khách về việc mua bán nick game và bảo hành vui lòng gửi liên hệ hoặc liên hệ trực tiếp qua hotline.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <p>📞 Hotline: <strong class="site-phone"></strong></p>
+        <p>📧 Email hỗ trợ: <strong class="site-email"></strong></p>
+        <p>📍 Văn phòng: <strong class="site-address"></strong></p>
+      </div>
+    </div>
+
+    <!-- Form Column -->
+    <div class="glass" style="padding: 40px;">
+      <h3 style="font-weight: 600; margin-bottom: 20px; color: var(--accent-cyan);">Gửi Lời Nhắn Hỗ Trợ</h3>
+      
+      <form id="contactForm">
+        <div class="form-group">
+          <label for="fullName">Họ và tên của bạn</label>
+          <input type="text" id="fullName" class="form-control" required placeholder="Họ tên của bạn">
+        </div>
+        <div class="form-group">
+          <label for="email">Địa chỉ Email</label>
+          <input type="email" id="email" class="form-control" required placeholder="email@gamenick.com">
+        </div>
+        <div class="form-group">
+          <label for="phone">Số điện thoại</label>
+          <input type="tel" id="phone" class="form-control" placeholder="Số điện thoại liên lạc">
+        </div>
+        <div class="form-group">
+          <label for="subject">Chủ đề liên hệ</label>
+          <input type="text" id="subject" class="form-control" placeholder="Ví dụ: Vấn đề nạp tiền, Hỗ trợ mua acc...">
+        </div>
+        <div class="form-group">
+          <label for="message">Nội dung chi tiết</label>
+          <textarea id="message" class="form-control" rows="4" required placeholder="Nhập nội dung cần hỗ trợ..."></textarea>
+        </div>
+        <button type="submit" id="submit-message-btn" class="btn btn-cyan" style="width: 100%;">
+          Gửi Liên Hệ Hỗ Trợ ✉️
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      try {
+        document.getElementById('submit-message-btn').disabled = true;
+        
+        const res = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, email, phone, subject, message })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          window.showToast(data.message, 'success');
+          document.getElementById('contactForm').reset();
+        } else {
+          window.showToast(data.message, 'error');
+        }
+        document.getElementById('submit-message-btn').disabled = false;
+      } catch (err) {
+        console.error(err);
+        window.showToast('Không thể gửi tin nhắn liên hệ.', 'error');
+        document.getElementById('submit-message-btn').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

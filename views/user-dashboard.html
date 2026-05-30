@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng điều khiển khách hàng - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- User Dashboard Layout -->
+  <div class="dashboard-wrapper">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar glass">
+      <div class="user-profile-section">
+        <div id="sidebar-avatar" class="user-avatar">U</div>
+        <h4 id="sidebar-name" class="user-name">Đang tải...</h4>
+        <span class="user-role-badge user">Khách hàng</span>
+        
+        <div class="wallet-box">
+          <p>Số dư ví</p>
+          <h3 id="sidebar-balance">0đ</h3>
+        </div>
+      </div>
+
+      <div class="dashboard-nav">
+        <div class="dashboard-nav-item active" data-tab="orders-tab">📦 Đơn hàng của tôi</div>
+        <div class="dashboard-nav-item" data-tab="deposit-tab">💸 Nạp tiền ví</div>
+        <div class="dashboard-nav-item" data-tab="complaints-tab">⚠️ Khiếu nại của tôi</div>
+        <div class="dashboard-nav-item" data-tab="wishlist-tab">❤️ Sản phẩm yêu thích</div>
+        <div class="dashboard-nav-item" data-tab="chat-tab">💬 Chat với CSKH</div>
+        <div class="dashboard-nav-item" data-tab="profile-tab">🔐 Đổi mật khẩu</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="dashboard-main">
+      
+      <!-- Tab 1: Orders History -->
+      <section id="orders-tab" class="dashboard-tab-content active">
+        <h2 class="tab-pane-title">Lịch Sử Đơn Hàng</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Sản phẩm</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái đơn</th>
+                <th>Thanh toán</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              <tr><td colspan="6" style="text-align: center;">Đang tải lịch sử mua hàng...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 2: Deposit -->
+      <section id="deposit-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Nạp Tiền Vào Ví</h2>
+        <div class="glass" style="padding: 30px;">
+          <h3 style="color: var(--accent-cyan); margin-bottom: 15px;">Thông tin nạp tiền ví</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Vui lòng chuyển khoản ngân hàng với thông tin dưới đây. Khi chuyển tiền thành công, số dư của bạn sẽ được cộng tự động hoặc liên hệ hotline để kiểm tra nhanh nhất.</p>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px;">
+            <p style="margin-bottom: 10px;">Ngân hàng: <strong id="deposit-bank-name" style="color: white;">Đang tải...</strong></p>
+            <p style="margin-bottom: 10px;">Số tài khoản: <strong id="deposit-bank-account" style="color: white; font-family: monospace;">Đang tải...</strong></p>
+            <p style="margin-bottom: 10px;">Chủ tài khoản: <strong id="deposit-bank-owner" style="color: white;">Đang tải...</strong></p>
+            <p style="margin-bottom: 10px;">Nội dung chuyển khoản (Bắt buộc): <strong id="deposit-memo" style="color: var(--accent-pink); font-family: monospace;">NAP <TÊN ĐĂNG NHẬP></strong></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Complaints -->
+      <section id="complaints-tab" class="dashboard-tab-content">
+        <div class="dashboard-actions-header">
+          <h2 class="tab-pane-title" style="margin-bottom: 0;">Khiếu Nại Đơn Hàng</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Tiêu đề khiếu nại</th>
+                <th>Trạng thái</th>
+                <th>Thời gian</th>
+                <th>Phản hồi giải quyết</th>
+              </tr>
+            </thead>
+            <tbody id="complaints-table-body">
+              <tr><td colspan="5" style="text-align: center;">Chưa có đơn khiếu nại nào.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 4: Profile / Change Password -->
+      <section id="profile-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Thay Đổi Mật Khẩu</h2>
+        <div class="glass" style="padding: 30px; max-width: 500px;">
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label for="oldPassword">Mật khẩu cũ</label>
+              <input type="password" id="oldPassword" class="form-control" required placeholder="Nhập mật khẩu cũ">
+            </div>
+            <div class="form-group">
+              <label for="newPassword">Mật khẩu mới</label>
+              <input type="password" id="newPassword" class="form-control" required placeholder="Tối thiểu 6 ký tự">
+            </div>
+            <button type="submit" class="btn btn-cyan" style="width: 100%; margin-top: 15px;">
+              Cập nhật mật khẩu 🔐
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab 5: Wishlist -->
+      <section id="wishlist-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Sản Phẩm Đã Yêu Thích</h2>
+        <div id="wishlist-grid" class="products-grid">
+          <!-- populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 6: Chat with CSKH -->
+      <section id="chat-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Chat Với Chăm Sóc Khách Hàng</h2>
+        <div class="glass" style="display: flex; flex-direction: column; height: 500px; border-radius: 12px; overflow: hidden;">
+          <div id="chat-staff-selector-area" style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <label for="chat-staff-select" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">Chọn Nhân Viên hỗ trợ:</label>
+            <select id="chat-staff-select" class="form-control" style="width: auto; padding: 6px 12px; height: 35px;"></select>
+          </div>
+          <div id="user-chat-messages" style="flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2);"></div>
+          <div style="padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: rgba(20,22,30,0.6);">
+            <input type="text" id="user-chat-input" class="form-control" placeholder="Nhập tin nhắn..." style="flex-grow: 1;">
+            <button id="user-chat-send-btn" class="btn btn-cyan" style="padding: 10px 20px;">Gửi 🚀</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Complaint Modal Form overlay -->
+  <div id="complaint-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Gửi Khiếu Nại Đơn Hàng</h3>
+        <button class="modal-close" onclick="closeComplaintModal()">&times;</button>
+      </div>
+      <form id="complaintForm">
+        <input type="hidden" id="complaint-order-id">
+        <div class="form-group">
+          <label>Mã đơn hàng</label>
+          <input type="text" id="complaint-order-code" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label for="complaint-title">Vấn đề khiếu nại</label>
+          <input type="text" id="complaint-title" class="form-control" required placeholder="Ví dụ: Nick không đăng nhập được, Sai mật khẩu...">
+        </div>
+        <div class="form-group">
+          <label for="complaint-desc">Mô tả chi tiết</label>
+          <textarea id="complaint-desc" class="form-control" rows="4" required placeholder="Mô tả cụ thể vấn đề để ban quản trị xử lý nhanh nhất..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="complaint-evidence">Ảnh minh chứng lỗi (tối đa 5 ảnh)</label>
+          <input type="file" id="complaint-evidence" class="form-control" multiple accept="image/*">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeComplaintModal()">Hủy</button>
+          <button type="submit" class="btn btn-danger">Gửi Khiếu Nại 🚨</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Review Modal Overlay -->
+  <div id="review-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Đánh Giá Tài Khoản</h3>
+        <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+      </div>
+      <form id="reviewForm">
+        <input type="hidden" id="review-account-id">
+        <div class="form-group">
+          <label for="review-rating">Xếp hạng sao</label>
+          <select id="review-rating" class="form-control" required>
+            <option value="5">⭐⭐⭐⭐⭐ (5 sao - Tuyệt vời)</option>
+            <option value="4">⭐⭐⭐⭐ (4 sao - Tốt)</option>
+            <option value="3">⭐⭐⭐ (3 sao - Bình thường)</option>
+            <option value="2">⭐⭐ (2 sao - Tệ)</option>
+            <option value="1">⭐ (1 sao - Rất tệ)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="review-comment">Bình luận đánh giá</label>
+          <textarea id="review-comment" class="form-control" rows="3" required placeholder="Viết cảm nhận của bạn..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeReviewModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Gửi Đánh Giá ★</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order credentials detail modal overlay -->
+  <div id="details-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Chi Tiết Đơn Hàng & Tài Khoản</h3>
+        <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="details-modal-body">
+        <!-- populated via js -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cyan" onclick="closeDetailsModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/user-dashboard.js"></script>
+</body>
+</html>

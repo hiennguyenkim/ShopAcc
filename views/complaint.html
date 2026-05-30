@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khiếu nại & Hỗ trợ bảo hành - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .info-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Info Area -->
+  <div class="info-container">
+    <div class="glass" style="padding: 40px;">
+      <h1 class="glow-text-cyan" style="font-weight: 800; font-size: 2rem; margin-bottom: 20px; text-align: center;">Quy Trình Giải Quyết Khiếu Nại</h1>
+      
+      <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 20px; line-height: 1.8;">
+        <div>
+          <h3 style="color: var(--accent-cyan); margin-bottom: 5px;">1. Trường hợp được hỗ trợ khiếu nại:</h3>
+          <ul>
+            <li>Nick nhận được bị sai thông tin đăng nhập (Tài khoản hoặc mật khẩu không chính xác).</li>
+            <li>Nick bị thông tin sai lệch so với mô tả chi tiết trên website.</li>
+            <li>Tài khoản game bị tranh chấp, bị khóa vĩnh viễn trước ngày mua.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 style="color: var(--accent-cyan); margin-bottom: 5px;">2. Cách thức gửi khiếu nại:</h3>
+          <p>Vì lý do bảo mật và chống gian lận, quý khách cần **đăng nhập vào tài khoản** đã mua hàng, truy cập **Bảng điều khiển khách hàng**, tìm đơn hàng tương ứng và click chọn **"Khiếu nại"** để điền thông tin và tải ảnh minh chứng giao dịch lỗi.</p>
+        </div>
+
+        <div>
+          <h3 style="color: var(--accent-cyan); margin-bottom: 5px;">3. Thời gian giải quyết khiếu nại:</h3>
+          <p>Mọi khiếu nại hợp lệ có đầy đủ thông tin mô tả và ảnh minh chứng sẽ được ban quản trị và nhân viên xử lý giải quyết trong vòng tối đa **24 giờ làm việc**.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: center; margin-top: 40px;">
+        <a href="/user-dashboard.html" class="btn btn-cyan">Đi Tới Trang Khiếu Nại Của Tôi 🚨</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

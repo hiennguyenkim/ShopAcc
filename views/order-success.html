@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt hàng thành công - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .success-container {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+    .success-card {
+      padding: 40px;
+      text-align: center;
+    }
+    .transfer-info-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 25px 0;
+      text-align: left;
+    }
+    .vietqr-image {
+      max-width: 250px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin: 15px auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <div id="user-actions" style="display: flex; gap: 10px;"></div>
+    </div>
+  </header>
+
+  <!-- Success Page -->
+  <div class="success-container">
+    <div class="success-card glass">
+      <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+      <h1 class="glow-text-cyan" style="font-size: 2rem; font-weight: 800; margin-bottom: 10px;">Đặt Hàng Thành Công!</h1>
+      <p style="color: var(--text-muted);">Đơn hàng của bạn đã được tiếp nhận và xử lý.</p>
+
+      <!-- Order Details -->
+      <div style="margin: 20px 0; font-size: 1.1rem; font-weight: 500;">
+        Mã đơn hàng: <span id="display-order-code" class="glow-text-cyan" style="font-family: monospace; font-size: 1.2rem; font-weight: bold;"></span>
+      </div>
+
+      <!-- Payment Guide (Visible if not paid via balance) -->
+      <div id="payment-guide-area" style="display: none;">
+        <h3 style="margin-top: 30px; font-weight: 600; color: var(--warning);">Hướng Dẫn Thanh Toán Chuyển Khoản</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Vui lòng chuyển khoản đúng số tiền và nội dung chuyển khoản dưới đây để hệ thống tự động duyệt hoặc nhân viên kiểm tra duyệt nhanh nhất.</p>
+
+        <div class="transfer-info-box">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: var(--text-muted);">Ngân hàng:</span>
+            <strong id="bank-name">Đang tải...</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: var(--text-muted);">Số tài khoản:</span>
+            <strong id="bank-account" style="font-family: monospace; font-size: 1.05rem;">Đang tải...</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: var(--text-muted);">Chủ tài khoản:</span>
+            <strong id="bank-owner">Đang tải...</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: var(--text-muted);">Số tiền chuyển:</span>
+            <strong id="bank-amount" class="glow-text-cyan" style="font-size: 1.1rem;">0đ</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Nội dung chuyển khoản (Bắt buộc):</span>
+            <strong id="bank-memo" style="color: var(--accent-pink); font-family: monospace; font-size: 1.1rem;">Nội dung</strong>
+          </div>
+        </div>
+
+        <div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Hoặc quét mã VietQR dưới đây để thanh toán nhanh:</p>
+          <img id="qr-code-img" src="" class="vietqr-image" alt="Mã thanh toán QR">
+        </div>
+
+        <!-- Upload Proof Section -->
+        <div class="glass" style="padding: 24px; margin-top: 30px; border-color: var(--border-color); text-align: left;">
+          <h4 style="font-weight: 600; margin-bottom: 8px;">Tải Lên Minh Chứng Thanh Toán</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Hãy chụp lại màn hình giao dịch chuyển khoản thành công và tải lên dưới đây để nhân viên xác nhận giao nick nhanh nhất.</p>
+          
+          <form id="proofForm">
+            <div class="form-group">
+              <input type="file" id="proofFile" class="form-control" accept="image/*" required>
+            </div>
+            <button type="submit" id="submit-proof-btn" class="btn btn-cyan" style="width: 100%;">
+              Gửi Minh Chứng Thanh Toán 📤
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="balance-success-area" style="display: none; padding: 20px; background: rgba(16,185,129,0.1); border: 1px solid var(--success); border-radius: 8px; margin: 25px 0;">
+        <p style="color: var(--success); font-weight: 600;">Đơn hàng đã được thanh toán tự động bằng số dư tài khoản của bạn.</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Mật khẩu và thông tin tài khoản đã sẵn sàng trong Dashboard của bạn.</p>
+      </div>
+
+      <div style="display: flex; gap: 15px; justify-content: center; margin-top: 35px;">
+        <a href="/user-dashboard.html" class="btn btn-purple">Vào Dashboard Nhận Nick 🔑</a>
+        <a href="/products.html" class="btn btn-outline">Tiếp tục mua sắm</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentOrderId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSuccessDetails();
+      document.getElementById('proofForm').addEventListener('submit', handleProofSubmission);
+    });
+
+    async function loadSuccessDetails() {
+      const params = new URLSearchParams(window.location.search);
+      const orderCode = params.get('orderCode');
+      const total = Number(params.get('total')) || 0;
+      const method = params.get('method');
+
+      if (!orderCode) {
+        window.location.href = '/index.html';
+        return;
+      }
+
+      document.getElementById('display-order-code').textContent = orderCode;
+
+      if (method === 'balance') {
+        document.getElementById('balance-success-area').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('payment-guide-area').style.display = 'block';
+
+      // Load SiteSettings to populate bank info
+      try {
+        const settingsRes = await fetch('/api/site-settings');
+        const settingsData = await settingsRes.json();
+        
+        if (settingsData.success && settingsData.settings) {
+          const s = settingsData.settings;
+          const bank = s.bankInfo;
+          
+          document.getElementById('bank-name').textContent = bank.bankName || 'Ngân hàng mẫu';
+          document.getElementById('bank-account').textContent = bank.accountNumber || '1234567890';
+          document.getElementById('bank-owner').textContent = bank.ownerName || 'NGUYEN VAN A';
+          document.getElementById('bank-amount').textContent = `${total.toLocaleString('vi-VN')}đ`;
+          document.getElementById('bank-memo').textContent = orderCode;
+
+          // VietQR structure template url replacement
+          let qrUrl = bank.qrTemplate
+            .replace('{bankName}', encodeURIComponent(bank.bankName))
+            .replace('{accountNumber}', encodeURIComponent(bank.accountNumber))
+            .replace('{amount}', total)
+            .replace('{addInfo}', encodeURIComponent(orderCode));
+          
+          document.getElementById('qr-code-img').src = qrUrl;
+        }
+
+        // Fetch Order ID from order code for form submit
+        const trackRes = await fetch('/api/orders/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderCode, phone: '0987654321' /* dummy, but we can search in user-dashboard or fetch */ })
+        });
+        
+        // Better yet: query my orders to find it
+        const myOrdersRes = await fetch('/api/orders/my-orders');
+        const myOrdersData = await myOrdersRes.json();
+        if (myOrdersData.success) {
+          const order = myOrdersData.orders.find(o => o.orderCode === orderCode);
+          if (order) {
+            currentOrderId = order._id;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleProofSubmission(e) {
+      e.preventDefault();
+      if (!currentOrderId) {
+        window.showToast('Không tìm thấy ID đơn hàng để gửi minh chứng.', 'error');
+        return;
+      }
+
+      const fileInput = document.getElementById('proofFile');
+      if (fileInput.files.length === 0) return;
+
+      const formData = new FormData();
+      formData.append('paymentProof', fileInput.files[0]);
+
+      try {
+        document.getElementById('submit-proof-btn').disabled = true;
+        document.getElementById('submit-proof-btn').textContent = 'Đang tải lên...';
+
+        const res = await fetch(`/api/orders/${currentOrderId}/payment-proof`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          window.showToast(data.message, 'success');
+          setTimeout(() => {
+            window.location.href = '/user-dashboard.html';
+          }, 1500);
+        } else {
+          window.showToast(data.message, 'error');
+          document.getElementById('submit-proof-btn').disabled = false;
+          document.getElementById('submit-proof-btn').textContent = 'Gửi Minh Chứng Thanh Toán 📤';
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Có lỗi xảy ra khi tải ảnh lên.', 'error');
+        document.getElementById('submit-proof-btn').disabled = false;
+        document.getElementById('submit-proof-btn').textContent = 'Gửi Minh Chứng Thanh Toán 📤';
+      }
+    }
+  </script>
+</body>
+</html>

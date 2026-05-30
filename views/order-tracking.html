@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra cứu đơn hàng - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .track-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .track-result-box {
+      margin-top: 30px;
+      padding: 30px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html" class="glow-text-cyan">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Track Form -->
+  <div class="track-container">
+    <div class="glass" style="padding: 30px;">
+      <h2 style="font-weight: 700; margin-bottom: 20px; color: var(--accent-cyan); text-align: center;">Tra Cứu Đơn Hàng</h2>
+      
+      <form id="trackForm" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="orderCode">Mã đơn hàng</label>
+          <input type="text" id="orderCode" class="form-control" required placeholder="Ví dụ: ORD-260530-X3A2">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="phone">Số điện thoại mua hàng</label>
+          <input type="tel" id="phone" class="form-control" required placeholder="Nhập số điện thoại">
+        </div>
+        <button type="submit" class="btn btn-cyan" style="height: 48px;">
+          Tìm Kiếm 🔍
+        </button>
+      </form>
+    </div>
+
+    <!-- Track Results -->
+    <div id="track-result-box" class="glass track-result-box">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">
+        <h3 id="result-code" class="glow-text-cyan" style="font-family: monospace;">ĐƠN HÀNG: ORD</h3>
+        <span id="result-status-badge" class="status-badge">Trạng thái</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; font-size: 0.95rem;">
+        <div>
+          <p style="color: var(--text-muted);">Khách hàng: <strong id="result-name" style="color: white;">Name</strong></p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Số điện thoại: <strong id="result-phone" style="color: white;">Phone</strong></p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Email: <strong id="result-email" style="color: white;">Email</strong></p>
+        </div>
+        <div>
+          <p style="color: var(--text-muted);">Hình thức: <strong id="result-method" style="color: white;">Chuyển khoản</strong></p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Tổng thanh toán: <strong id="result-total" class="glow-text-cyan">0đ</strong></p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Thời gian tạo: <strong id="result-date" style="color: white;">Date</strong></p>
+        </div>
+      </div>
+
+      <h4 style="font-weight: 600; margin-bottom: 12px; border-top: 1px solid var(--border-color); padding-top: 15px;">Tài Khoản Game Trong Đơn</h4>
+      <div id="result-items-list" style="margin-bottom: 25px;">
+        <!-- items details -->
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('trackForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const orderCode = document.getElementById('orderCode').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      const resultBox = document.getElementById('track-result-box');
+      resultBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/orders/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderCode, phone })
+        });
+        const data = await res.json();
+
+        if (data.success && data.order) {
+          const o = data.order;
+          
+          document.getElementById('result-code').textContent = `ĐƠN HÀNG: ${o.orderCode}`;
+          
+          // Badge setting
+          const badge = document.getElementById('result-status-badge');
+          badge.className = `status-badge ${o.orderStatus}`;
+          
+          const statusLabels = {
+            pending_payment: 'Chờ thanh toán',
+            pending_confirm: 'Chờ duyệt',
+            paid: 'Đã thanh toán',
+            delivering: 'Đang bàn giao',
+            completed: 'Đã hoàn thành',
+            cancelled: 'Đã hủy',
+            refunded: 'Đã hoàn tiền',
+            dispute: 'Đang khiếu nại'
+          };
+          badge.textContent = statusLabels[o.orderStatus] || o.orderStatus;
+
+          document.getElementById('result-name').textContent = o.customerInfo.fullName;
+          document.getElementById('result-phone').textContent = o.customerInfo.phone;
+          document.getElementById('result-email').textContent = o.customerInfo.email;
+          
+          const methodLabels = {
+            bank_transfer: 'Chuyển khoản ngân hàng',
+            e_wallet: 'Ví điện tử Momo/Zalo',
+            balance: 'Số dư ví cá nhân'
+          };
+          document.getElementById('result-method').textContent = methodLabels[o.paymentMethod] || o.paymentMethod;
+          document.getElementById('result-total').textContent = `${o.total.toLocaleString('vi-VN')}đ`;
+          document.getElementById('result-date').textContent = new Date(o.createdAt).toLocaleString('vi-VN');
+
+          // Items listing
+          const list = document.getElementById('result-items-list');
+          list.innerHTML = '';
+          
+          o.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'glass';
+            div.style.padding = '15px';
+            div.style.marginBottom = '15px';
+            div.style.borderColor = 'rgba(255,255,255,0.05)';
+
+            let credentialsHtml = '';
+            // If order completed, reveal login credentials
+            if (o.orderStatus === 'completed' && item.loginInfo) {
+              credentialsHtml = `
+                <div class="login-credentials-reveal">
+                  <h5 style="color: var(--accent-cyan); margin-bottom: 10px;">🔑 Thông tin đăng nhập nick game:</h5>
+                  <table>
+                    <tr><td>Tài khoản:</td><td><span class="secret-val">${item.loginInfo.username}</span></td></tr>
+                    <tr><td>Mật khẩu:</td><td><span class="secret-val">${item.loginInfo.password}</span></td></tr>
+                    <tr><td>Hình thức:</td><td><strong>${item.loginInfo.loginMethod || 'Garena/Riot/FB'}</strong></td></tr>
+                    ${item.loginInfo.linkedEmail ? `<tr><td>Email liên kết:</td><td>${item.loginInfo.linkedEmail}</td></tr>` : ''}
+                    ${item.loginInfo.securityNote ? `<tr><td>Lưu ý bảo mật:</td><td><span style="color: var(--warning);">${item.loginInfo.securityNote}</span></td></tr>` : ''}
+                  </table>
+                </div>
+              `;
+            } else if (o.orderStatus !== 'completed') {
+              credentialsHtml = `
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem; color: var(--warning); border: 1px dashed var(--warning);">
+                  🔒 Thông tin đăng nhập sẽ hiển thị ở đây sau khi đơn hàng hoàn thành (Đã thanh toán & Bàn giao).
+                </div>
+              `;
+            }
+
+            div.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="color: white; font-size: 1.05rem;">${item.name}</strong>
+                  <div style="color: var(--accent-cyan); font-size: 0.8rem; font-weight: bold; margin-top: 4px;">MS: ${item.code}</div>
+                </div>
+                <strong style="color: white;">${item.price.toLocaleString('vi-VN')}đ</strong>
+              </div>
+              ${credentialsHtml}
+            `;
+            list.appendChild(div);
+          });
+
+          resultBox.style.display = 'block';
+        } else {
+          window.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Không tìm thấy thông tin đơn hàng.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

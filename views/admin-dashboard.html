@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng điều khiển quản trị - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <!-- Chart.js CDN for Revenue and Statistics Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .admin-modal-scroll {
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .header-balance {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <div id="user-actions" style="display: flex; gap: 10px;"></div>
+    </div>
+  </header>
+
+  <!-- Admin Dashboard Container -->
+  <div class="dashboard-wrapper">
+    
+    <!-- Sidebar Navigation panel -->
+    <aside class="dashboard-sidebar glass">
+      <div class="user-profile-section">
+        <div id="sidebar-avatar" class="user-avatar" style="background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));">A</div>
+        <h4 id="sidebar-name" class="user-name">Quản Trị Viên</h4>
+        <span class="user-role-badge admin">ADMIN</span>
+      </div>
+
+      <div class="dashboard-nav" style="gap: 5px;">
+        <div class="dashboard-nav-item active" data-tab="overview-tab">📈 Thống kê chung</div>
+        <div class="dashboard-nav-item" data-tab="nicks-tab">🎮 Quản lý nick game</div>
+        <div class="dashboard-nav-item" data-tab="categories-tab">📁 Danh mục & BST</div>
+        <div class="dashboard-nav-item" data-tab="users-tab">👥 Tài khoản & Ví</div>
+        <div class="dashboard-nav-item" data-tab="coupons-tab">🎫 Mã giảm giá</div>
+        <div class="dashboard-nav-item" data-tab="settings-tab">⚙️ Cài đặt trang chủ</div>
+        <div class="dashboard-nav-item" data-tab="audit-tab">📜 Nhật ký hoạt động</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+      
+      <!-- Tab 1: Stat Charting -->
+      <section id="overview-tab" class="dashboard-tab-content active">
+        <h2 class="tab-pane-title">Báo Cáo Thống Kê Doanh Thu</h2>
+        
+        <!-- Date Filters and Quick Ranges -->
+        <div class="glass" style="padding: 20px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; justify-content: space-between; border: 1px solid var(--border-color);">
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Từ ngày</label>
+              <input type="date" id="stats-start-date" class="form-control" style="width: 160px; height: 38px; padding: 6px 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Đến ngày</label>
+              <input type="date" id="stats-end-date" class="form-control" style="width: 160px; height: 38px; padding: 6px 12px;">
+            </div>
+            <button id="btn-apply-stats" class="btn btn-cyan" style="height: 38px;">Lọc báo cáo 📊</button>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-range-7days" class="btn btn-outline" style="height: 38px; padding: 0 15px; font-size: 0.85rem;">7 ngày qua</button>
+            <button id="btn-range-month" class="btn btn-outline" style="height: 38px; padding: 0 15px; font-size: 0.85rem;">Tháng này</button>
+            <button id="btn-range-year" class="btn btn-outline" style="height: 38px; padding: 0 15px; font-size: 0.85rem;">Năm nay</button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 30px;">
+          <div class="glass stat-card">
+            <p class="stat-title">Doanh thu tổng</p>
+            <h3 id="stat-revenue" class="stat-value" style="color: var(--success);">0đ</h3>
+          </div>
+          <div class="glass stat-card">
+            <p class="stat-title">Tổng nick đã bán</p>
+            <h3 id="stat-sold-count" class="stat-value">0</h3>
+          </div>
+          <div class="glass stat-card">
+            <p class="stat-title">Thành viên đăng ký mới</p>
+            <h3 id="stat-users-count" class="stat-value" style="color: var(--accent-purple);">0</h3>
+          </div>
+        </div>
+
+        <div class="glass chart-panel" style="margin-bottom: 30px;">
+          <h3 style="margin-bottom: 20px; font-weight: 600;">Biểu đồ doanh số bán nick</h3>
+          <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Category charts -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="glass chart-panel">
+            <h3 style="margin-bottom: 20px; font-weight: 600;">Doanh thu theo danh mục game</h3>
+            <div class="chart-container" style="height: 300px; position: relative;">
+              <canvas id="categoryRevenueChart"></canvas>
+            </div>
+          </div>
+          <div class="glass chart-panel">
+            <h3 style="margin-bottom: 20px; font-weight: 600;">Số nick bán theo danh mục</h3>
+            <div class="chart-container" style="height: 300px; position: relative;">
+              <canvas id="categoryCountChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Manage Game Accounts -->
+      <section id="nicks-tab" class="dashboard-tab-content">
+        <div class="dashboard-actions-header">
+          <h2 class="tab-pane-title" style="margin-bottom: 0;">Quản Lý Nick Game</h2>
+          <button onclick="openNickModal()" class="btn btn-cyan">Thêm Nick Mới ➕</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã số</th>
+                <th>Tên nick</th>
+                <th>Thể loại</th>
+                <th>Giá tiền</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="admin-nicks-tbody">
+              <!-- populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 3: Categories & Collections -->
+      <section id="categories-tab" class="dashboard-tab-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+          
+          <!-- Categories Column -->
+          <div>
+            <div class="dashboard-actions-header">
+              <h3 style="font-weight: 700; color: var(--accent-cyan);">Danh Mục Game</h3>
+              <button onclick="openCategoryModal()" class="btn btn-cyan" style="padding: 6px 12px; font-size: 0.85rem;">Thêm ➕</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tên danh mục</th>
+                    <th>Slug</th>
+                    <th>Xóa</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-categories-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Collections Column -->
+          <div>
+            <div class="dashboard-actions-header">
+              <h3 style="font-weight: 700; color: var(--accent-cyan);">Bộ Sưu Tập</h3>
+              <button onclick="openCollectionModal()" class="btn btn-cyan" style="padding: 6px 12px; font-size: 0.85rem;">Thêm ➕</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tên BST</th>
+                    <th>Số lượng nick</th>
+                    <th>Xóa</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-collections-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Tab 4: Users and balances -->
+      <section id="users-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Quản Lý Tài Khoản Thành Viên</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Thành viên</th>
+                <th>Vai trò</th>
+                <th>Số dư ví</th>
+                <th>Trạng thái</th>
+                <th>Hành động ví</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 5: Coupon Codes -->
+      <section id="coupons-tab" class="dashboard-tab-content">
+        <div class="dashboard-actions-header">
+          <h2 class="tab-pane-title" style="margin-bottom: 0;">Mã Giảm Giá</h2>
+          <button onclick="openCouponModal()" class="btn btn-cyan">Thêm Mã Mới ➕</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã code</th>
+                <th>Loại giảm</th>
+                <th>Giá trị</th>
+                <th>Đã dùng</th>
+                <th>Hạn dùng</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="admin-coupons-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 6: Site Settings CRUD banner/bank details -->
+      <section id="settings-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Cấu Hình Trang Chủ & Thanh Toán</h2>
+        <div class="glass" style="padding: 30px;">
+          <form id="siteSettingsForm">
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <label for="bannerTitle">Tiêu đề Banner</label>
+                <input type="text" id="bannerTitle" class="form-control" required>
+              </div>
+              <div>
+                <label for="bannerSubtitle">Mô tả ngắn Banner</label>
+                <input type="text" id="bannerSubtitle" class="form-control" required>
+              </div>
+            </div>
+            
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+              <div>
+                <label for="contactPhone">Hotline hỗ trợ</label>
+                <input type="text" id="contactPhone" class="form-control" required>
+              </div>
+              <div>
+                <label for="contactEmail">Email liên lạc</label>
+                <input type="email" id="contactEmail" class="form-control" required>
+              </div>
+              <div>
+                <label for="address">Văn phòng đại diện</label>
+                <input type="text" id="address" class="form-control" required>
+              </div>
+            </div>
+
+            <!-- Payment Accounts Configurations -->
+            <h3 style="color: var(--accent-cyan); margin: 30px 0 15px; font-weight: 600;">Thông Tin Nhận Tiền Ngân Hàng</h3>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+              <div>
+                <label for="bankName">Tên ngân hàng</label>
+                <input type="text" id="bankName" class="form-control" placeholder="MBBank, Techcombank...">
+              </div>
+              <div>
+                <label for="bankAccount">Số tài khoản</label>
+                <input type="text" id="bankAccount" class="form-control">
+              </div>
+              <div>
+                <label for="bankOwner">Chủ tài khoản (Viết hoa)</label>
+                <input type="text" id="bankOwner" class="form-control" placeholder="NGUYEN VAN A">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-cyan" style="margin-top: 20px; width: 200px;">
+              Lưu Cấu Hình 💾
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab 7: Security Audit Logs -->
+      <section id="audit-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Nhật Ký Hoạt Động (Audit Logs)</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Tài khoản thực hiện</th>
+                <th>Tác vụ</th>
+                <th>Chi tiết hoạt động</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="admin-audit-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Nick Creator / Editor Modal Overlay -->
+  <div id="nick-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 id="nick-modal-title">Đăng Bán Nick Game Mới</h3>
+        <button class="modal-close" onclick="closeNickModal()">&times;</button>
+      </div>
+      <form id="nickForm">
+        <input type="hidden" id="nick-id">
+        <div class="admin-modal-scroll">
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+              <label for="nick-code">Mã Nick (Mã số duy nhất)</label>
+              <input type="text" id="nick-code" class="form-control" required placeholder="Ví dụ: LQ001">
+            </div>
+            <div>
+              <label for="nick-name">Tiêu đề Nick</label>
+              <input type="text" id="nick-name" class="form-control" required placeholder="Nick cực ngon VIP...">
+            </div>
+            <div>
+              <label for="nick-category">Danh mục game</label>
+              <select id="nick-category" class="form-control" required></select>
+            </div>
+          </div>
+
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+              <label for="nick-gameType">Loại Game</label>
+              <select id="nick-gameType" class="form-control" required>
+                <option value="lien_quan">Liên Quân Mobile</option>
+                <option value="free_fire">Free Fire</option>
+                <option value="fifa_mobile">FIFA Mobile</option>
+                <option value="lol">LMHT (LOL)</option>
+                <option value="pubg">PUBG Mobile</option>
+              </select>
+            </div>
+            <div>
+              <label for="nick-price">Giá bán (đ)</label>
+              <input type="number" id="nick-price" class="form-control" required min="0">
+            </div>
+            <div>
+              <label for="nick-oldPrice">Giá cũ (nếu có)</label>
+              <input type="number" id="nick-oldPrice" class="form-control" min="0">
+            </div>
+          </div>
+
+          <!-- Basic specs -->
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
+            <div>
+              <label for="nick-rank">Hạng (Rank)</label>
+              <input type="text" id="nick-rank" class="form-control" placeholder="Cao Thủ, Kim Cương...">
+            </div>
+            <div>
+              <label for="nick-level">Cấp độ (Level)</label>
+              <input type="text" id="nick-level" class="form-control" placeholder="30, 100...">
+            </div>
+            <div>
+              <label for="nick-server">Server</label>
+              <input type="text" id="nick-server" class="form-control" placeholder="Việt Nam, Asia...">
+            </div>
+            <div>
+              <label for="nick-warranty">Số ngày bảo hành</label>
+              <input type="number" id="nick-warranty" class="form-control" min="0" value="0">
+            </div>
+          </div>
+
+          <!-- Credentials lock fields -->
+          <h4 style="color: var(--accent-cyan); margin: 15px 0 10px;">🔐 Thông Tin Đăng Nhập (Chỉ Admin/Nhân Viên Thấy)</h4>
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+              <label for="nick-login-user">Tài khoản đăng nhập</label>
+              <input type="text" id="nick-login-user" class="form-control" required>
+            </div>
+            <div>
+              <label for="nick-login-pass">Mật khẩu đăng nhập</label>
+              <input type="text" id="nick-login-pass" class="form-control" required>
+            </div>
+            <div>
+              <label for="nick-login-method">Cổng đăng nhập</label>
+              <input type="text" id="nick-login-method" class="form-control" placeholder="Facebook, Garena, Riot...">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nick-images">Ảnh nick game (Chọn nhiều ảnh)</label>
+            <input type="file" id="nick-images" class="form-control" multiple accept="image/*">
+          </div>
+
+          <div class="form-group">
+            <label for="nick-desc">Mô tả nick game</label>
+            <textarea id="nick-desc" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeNickModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Đăng Bán 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Wallet adjustment overlay modal -->
+  <div id="wallet-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Cộng / Trừ Số Dư Ví Cá Nhân</h3>
+        <button class="modal-close" onclick="closeWalletModal()">&times;</button>
+      </div>
+      <form id="walletForm">
+        <input type="hidden" id="wallet-user-id">
+        <div class="form-group">
+          <label>Tài khoản nhận</label>
+          <input type="text" id="wallet-username-display" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label for="wallet-action">Tác vụ ví</label>
+          <select id="wallet-action" class="form-control">
+            <option value="deposit">Cộng số dư ví (Nạp tiền)</option>
+            <option value="withdraw">Trừ số dư ví (Khấu trừ)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="wallet-amount">Số tiền muốn thay đổi (đ)</label>
+          <input type="number" id="wallet-amount" class="form-control" required min="1000" placeholder="Ví dụ: 100000">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeWalletModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Thực thi tác vụ 💸</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category creator Modal -->
+  <div id="category-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Tạo Danh Mục Game Mới</h3>
+        <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <div class="form-group">
+          <label for="cat-name">Tên danh mục</label>
+          <input type="text" id="cat-name" class="form-control" required placeholder="Ví dụ: Liên Quân Mobile">
+        </div>
+        <div class="form-group">
+          <label for="cat-desc">Mô tả ngắn</label>
+          <input type="text" id="cat-desc" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="cat-image">Ảnh danh mục</label>
+          <input type="file" id="cat-image" class="form-control" accept="image/*">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCategoryModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Tạo mới</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Collection creator Modal -->
+  <div id="collection-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Tạo Bộ Sưu Tập Mới</h3>
+        <button class="modal-close" onclick="closeCollectionModal()">&times;</button>
+      </div>
+      <form id="collectionForm">
+        <div class="form-group">
+          <label for="col-name">Tên bộ sưu tập</label>
+          <input type="text" id="col-name" class="form-control" required placeholder="Ví dụ: Nick Siêu Rẻ">
+        </div>
+        <div class="form-group">
+          <label for="col-desc">Mô tả ngắn</label>
+          <input type="text" id="col-desc" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="col-image">Ảnh banner BST</label>
+          <input type="file" id="col-image" class="form-control" accept="image/*">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCollectionModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Tạo mới</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Coupon creator Modal -->
+  <div id="coupon-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Tạo Mã Giảm Giá Mới</h3>
+        <button class="modal-close" onclick="closeCouponModal()">&times;</button>
+      </div>
+      <form id="couponForm">
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <label for="coup-code">Mã giảm giá (Viết hoa)</label>
+            <input type="text" id="coup-code" class="form-control" required placeholder="GAME10">
+          </div>
+          <div>
+            <label for="coup-name">Tên mã giảm giá</label>
+            <input type="text" id="coup-name" class="form-control" required placeholder="Giảm giá game thủ">
+          </div>
+        </div>
+
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <label for="coup-type">Hình thức giảm giá</label>
+            <select id="coup-type" class="form-control">
+              <option value="percent">Giảm theo Phần Trăm (%)</option>
+              <option value="fixed">Giảm số tiền cố định (đ)</option>
+            </select>
+          </div>
+          <div>
+            <label for="coup-val">Giá trị giảm</label>
+            <input type="number" id="coup-val" class="form-control" required min="1">
+          </div>
+        </div>
+
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <label for="coup-minVal">Giá trị đơn tối thiểu (đ)</label>
+            <input type="number" id="coup-minVal" class="form-control" required min="0" value="0">
+          </div>
+          <div>
+            <label for="coup-limit">Tổng lượt sử dụng tối đa</label>
+            <input type="number" id="coup-limit" class="form-control" required min="1" value="100">
+          </div>
+        </div>
+
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <label for="coup-start">Ngày bắt đầu</label>
+            <input type="date" id="coup-start" class="form-control" required>
+          </div>
+          <div>
+            <label for="coup-end">Ngày kết thúc</label>
+            <input type="date" id="coup-end" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCouponModal()">Hủy</button>
+          <button type="submit" class="btn btn-cyan">Tạo mã</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/admin-dashboard.js"></script>
+</body>
+</html>

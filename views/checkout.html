@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh toán đơn hàng - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .checkout-layout {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 30px;
+    }
+    .payment-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .payment-option-card {
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(255,255,255,0.02);
+    }
+    .payment-option-card.active {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.05);
+      box-shadow: var(--glow-cyan);
+    }
+    .checkout-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .checkout-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <div id="user-actions" style="display: flex; gap: 10px;"></div>
+    </div>
+  </header>
+
+  <!-- Checkout Page Layout -->
+  <div class="checkout-layout">
+    
+    <!-- Left form info -->
+    <div>
+      <div class="glass" style="padding: 30px; margin-bottom: 30px;">
+        <h2 style="font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--accent-cyan);">Thông Tin Người Mua</h2>
+        
+        <form id="checkoutForm">
+          <div class="form-group">
+            <label for="fullName">Họ và tên</label>
+            <input type="text" id="fullName" class="form-control" required placeholder="Họ tên người nhận">
+          </div>
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+              <label for="phone">Số điện thoại</label>
+              <input type="tel" id="phone" class="form-control" required pattern="^0\d{8,10}$" placeholder="Số điện thoại nhận thông báo">
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input type="email" id="email" class="form-control" required placeholder="Địa chỉ email nhận hóa đơn">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="note">Ghi chú đơn hàng (nếu có)</label>
+            <textarea id="note" class="form-control" rows="3" placeholder="Ghi chú yêu cầu thêm..."></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="glass" style="padding: 30px;">
+        <h2 style="font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--accent-cyan);">Phương Thức Thanh Toán</h2>
+        <div class="payment-options-grid">
+          <div class="payment-option-card active" data-method="bank_transfer">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🏦</div>
+            <h4>Chuyển khoản</h4>
+          </div>
+          <div class="payment-option-card" data-method="e_wallet">
+            <div style="font-size: 2rem; margin-bottom: 8px;">📱</div>
+            <h4>Ví điện tử</h4>
+          </div>
+          <div class="payment-option-card" data-method="balance">
+            <div style="font-size: 2rem; margin-bottom: 8px;">💳</div>
+            <h4>Số dư ví</h4>
+            <div id="balance-sub-label" style="font-size: 0.75rem; color: var(--accent-cyan); margin-top: 4px;">0đ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Summary Details -->
+    <aside>
+      <div class="glass" style="padding: 24px;">
+        <h3 style="font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Đơn Hàng Của Bạn</h3>
+        
+        <div id="checkout-items-list" style="margin-bottom: 20px;">
+          <!-- items list -->
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted);">
+            <span>Tạm tính</span>
+            <span id="subtotal-val">0đ</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--accent-pink);">
+            <span>Mã giảm giá</span>
+            <span id="discount-val">-0đ</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <span>Tổng số tiền</span>
+            <span id="total-val" class="glow-text-cyan">0đ</span>
+          </div>
+        </div>
+
+        <button id="submit-checkout-btn" class="btn btn-cyan" style="width: 100%; margin-top: 24px; font-size: 1.1rem; padding: 12px 24px;">
+          Xác Nhận Đặt Hàng 🚀
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    let selectedMethod = 'bank_transfer';
+    let userBalance = 0;
+    let orderTotal = 0;
+    let isBuyNowMode = false;
+    let buyNowAccount = null;
+
+    // Parse query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    const accountId = urlParams.get('accountId');
+    if (mode === 'buynow' && accountId) {
+      isBuyNowMode = true;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCheckoutDetails();
+      setupPaymentOptionClicks();
+      document.getElementById('submit-checkout-btn').addEventListener('click', handleOrderSubmission);
+    });
+
+    async function loadCheckoutDetails() {
+      // 1. Autofill customer info if user logged in
+      try {
+        const userRes = await fetch('/api/auth/me');
+        const userData = await userRes.json();
+        if (userData.success && userData.user) {
+          document.getElementById('fullName').value = userData.user.fullName || '';
+          document.getElementById('phone').value = userData.user.phone || '';
+          document.getElementById('email').value = userData.user.email || '';
+          
+          userBalance = userData.user.balance;
+          document.getElementById('balance-sub-label').textContent = `${userBalance.toLocaleString('vi-VN')}đ`;
+        } else {
+          // If guest, force redirect to login
+          window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      const list = document.getElementById('checkout-items-list');
+      list.innerHTML = '';
+      let subtotal = 0;
+
+      if (isBuyNowMode) {
+        try {
+          const accRes = await fetch(`/api/game-accounts/${accountId}`);
+          const accData = await accRes.json();
+          if (accRes.status === 200 && accData.success && accData.gameAccount) {
+            buyNowAccount = accData.gameAccount;
+            
+            subtotal = buyNowAccount.price;
+            const div = document.createElement('div');
+            div.className = 'checkout-item';
+            div.innerHTML = `
+              <div>
+                <h5 style="font-weight: 500;">${buyNowAccount.name}</h5>
+                <small style="color: var(--accent-cyan);">MS: ${buyNowAccount.code}</small>
+              </div>
+              <span style="font-weight: 600;">${buyNowAccount.price.toLocaleString('vi-VN')}đ</span>
+            `;
+            list.appendChild(div);
+          } else {
+            window.showToast('Không tìm thấy tài khoản game này hoặc trạng thái không hợp lệ.', 'error');
+            setTimeout(() => {
+              window.location.href = '/products.html';
+            }, 1500);
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          window.location.href = '/products.html';
+          return;
+        }
+      } else {
+        // 2. Load Cart
+        const cart = window.getCart();
+        if (cart.length === 0) {
+          window.location.href = '/cart.html';
+          return;
+        }
+
+        cart.forEach(item => {
+          subtotal += item.price;
+          const div = document.createElement('div');
+          div.className = 'checkout-item';
+          div.innerHTML = `
+            <div>
+              <h5 style="font-weight: 500;">${item.name}</h5>
+              <small style="color: var(--accent-cyan);">MS: ${item.code}</small>
+            </div>
+            <span style="font-weight: 600;">${item.price.toLocaleString('vi-VN')}đ</span>
+          `;
+          list.appendChild(div);
+        });
+      }
+
+      // 3. Verify Coupon if applied in Cart
+      let discountAmount = 0;
+      const couponCode = sessionStorage.getItem('appliedCouponCode');
+      
+      if (couponCode) {
+        try {
+          const couponRes = await fetch('/api/coupons/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: couponCode, orderValue: subtotal })
+          });
+          const couponData = await couponRes.json();
+          if (couponData.success) {
+            discountAmount = couponData.discountAmount;
+            document.getElementById('discount-val').textContent = `-${discountAmount.toLocaleString('vi-VN')}đ`;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      document.getElementById('subtotal-val').textContent = `${subtotal.toLocaleString('vi-VN')}đ`;
+      orderTotal = subtotal - discountAmount;
+      document.getElementById('total-val').textContent = `${orderTotal.toLocaleString('vi-VN')}đ`;
+    }
+
+    function setupPaymentOptionClicks() {
+      const cards = document.querySelectorAll('.payment-option-card');
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          cards.forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          selectedMethod = card.getAttribute('data-method');
+        });
+      });
+    }
+
+    async function handleOrderSubmission() {
+      // Validate customer form
+      const fullName = document.getElementById('fullName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const note = document.getElementById('note').value.trim();
+
+      if (!fullName || !phone || !email) {
+        window.showToast('Vui lòng điền đầy đủ thông tin người mua.', 'warning');
+        return;
+      }
+
+      // Check balance limit
+      if (selectedMethod === 'balance' && userBalance < orderTotal) {
+        window.showToast('Số dư tài khoản không đủ để thanh toán.', 'error');
+        return;
+      }
+
+      let items = [];
+      if (isBuyNowMode) {
+        items = [{
+          accountId: buyNowAccount._id,
+          code: buyNowAccount.code,
+          name: buyNowAccount.name,
+          gameType: buyNowAccount.gameType,
+          price: buyNowAccount.price
+        }];
+      } else {
+        const cart = window.getCart();
+        items = cart.map(i => ({ accountId: i.accountId, code: i.code, name: i.name, gameType: i.gameType, price: i.price }));
+      }
+
+      const couponCode = sessionStorage.getItem('appliedCouponCode') || undefined;
+
+      const orderBody = {
+        customerInfo: { fullName, phone, email, note },
+        items,
+        couponCode,
+        paymentMethod: selectedMethod
+      };
+
+      try {
+        document.getElementById('submit-checkout-btn').disabled = true;
+        document.getElementById('submit-checkout-btn').textContent = 'Đang xử lý đơn...';
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderBody)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          // Clean cart & coupon session
+          if (!isBuyNowMode) {
+            window.clearCart();
+          }
+          sessionStorage.removeItem('appliedCouponCode');
+          
+          window.showToast(data.message, 'success');
+          
+          setTimeout(() => {
+            window.location.href = `/order-success.html?orderCode=${data.order.orderCode}&total=${data.order.total}&method=${data.order.paymentMethod}`;
+          }, 1000);
+        } else {
+          window.showToast(data.message, 'error');
+          document.getElementById('submit-checkout-btn').disabled = false;
+          document.getElementById('submit-checkout-btn').textContent = 'Xác Nhận Đặt Hàng';
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Có lỗi xảy ra khi tạo đơn hàng.', 'error');
+        document.getElementById('submit-checkout-btn').disabled = false;
+        document.getElementById('submit-checkout-btn').textContent = 'Xác Nhận Đặt Hàng';
+      }
+    }
+  </script>
+</body>
+</html>

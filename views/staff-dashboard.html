@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng điều khiển nhân viên - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .header-balance {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <div id="user-actions" style="display: flex; gap: 10px;"></div>
+    </div>
+  </header>
+
+  <!-- Staff Dashboard Layout -->
+  <div class="dashboard-wrapper">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar glass">
+      <div class="user-profile-section">
+        <div id="sidebar-avatar" class="user-avatar">S</div>
+        <h4 id="sidebar-name" class="user-name">Đang tải...</h4>
+        <span class="user-role-badge staff">Nhân viên</span>
+      </div>
+
+      <div class="dashboard-nav">
+        <div class="dashboard-nav-item active" data-tab="overview-tab">📊 Tổng quan</div>
+        <div class="dashboard-nav-item" data-tab="orders-tab">📦 Quản lý đơn hàng</div>
+        <div class="dashboard-nav-item" data-tab="confirm-payment-tab">💳 Xác nhận thanh toán</div>
+        <div class="dashboard-nav-item" data-tab="chat-tab">💬 Chat CSKH</div>
+        <div class="dashboard-nav-item" data-tab="products-tab">🎮 Sản phẩm</div>
+        <div class="dashboard-nav-item" data-tab="manual-order-tab">➕ Tạo đơn thủ công</div>
+        <div class="dashboard-nav-item" data-tab="direct-handover-tab">🔑 Bàn giao nick</div>
+        <div class="dashboard-nav-item" data-tab="contacts-tab">✉️ Tin nhắn hỗ trợ</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="dashboard-main">
+      
+      <!-- Tab 1: Overview stats -->
+      <section id="overview-tab" class="dashboard-tab-content active">
+        <h2 class="tab-pane-title">Số Liệu Tổng Quan Trong Ngày</h2>
+        <div class="stats-grid">
+          <div class="glass stat-card">
+            <p class="stat-title">Đơn hàng cần duyệt</p>
+            <h3 id="stat-pending-confirm" class="stat-value">0</h3>
+          </div>
+          <div class="glass stat-card">
+            <p class="stat-title">Đơn hàng đang bàn giao</p>
+            <h3 id="stat-delivering" class="stat-value" style="color: var(--accent-purple);">0</h3>
+          </div>
+          <div class="glass stat-card">
+            <p class="stat-title">Tổng đơn hoàn thành</p>
+            <h3 id="stat-completed" class="stat-value" style="color: var(--success);">0</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Manage Orders -->
+      <section id="orders-tab" class="dashboard-tab-content">
+        <div class="dashboard-actions-header">
+          <h2 class="tab-pane-title" style="margin-bottom: 0;">Quản Lý Đơn Hàng</h2>
+          <div class="dashboard-search-filters">
+            <input type="text" id="order-search" class="form-control" placeholder="Tìm theo mã đơn, khách hàng, SĐT...">
+            <select id="order-status-filter" class="form-control" style="width: 180px;">
+              <option value="">Tất cả trạng thái</option>
+              <option value="pending_payment">Chờ chuyển khoản</option>
+              <option value="pending_confirm">Chờ duyệt thanh toán</option>
+              <option value="delivering">Đang bàn giao nick</option>
+              <option value="completed">Đã hoàn tất</option>
+              <option value="cancelled">Đã hủy</option>
+              <option value="refunded">Đã hoàn tiền</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>SĐT</th>
+                <th>Tổng thanh toán</th>
+                <th>Đơn hàng</th>
+                <th>Thanh toán</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="staff-orders-tbody">
+              <!-- orders rows -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 3: Chat CSKH -->
+      <section id="chat-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Chat Chăm Sóc Khách Hàng</h2>
+        <div class="chat-dashboard-container glass">
+          <!-- Left column: Conversations list -->
+          <div class="chat-conversations-sidebar">
+            <div class="chat-search-box">
+              <input type="text" id="chat-search-input" class="form-control" placeholder="Tìm tên khách hàng...">
+            </div>
+            <div class="chat-conversations-list" id="chat-conversations-list">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+          <!-- Right column: Message area -->
+          <div class="chat-messages-area">
+            <div class="chat-messages-header" id="chat-messages-header">
+              <h4>Chọn một cuộc hội thoại để bắt đầu</h4>
+            </div>
+            <div class="chat-messages-body" id="chat-messages-body">
+              <div class="chat-messages-placeholder">
+                💬 Vui lòng chọn khách hàng từ danh sách để xem tin nhắn
+              </div>
+            </div>
+            <div class="chat-messages-footer" id="chat-messages-footer" style="display: none;">
+              <input type="text" id="chat-reply-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off">
+              <button id="chat-send-btn" class="btn btn-cyan">Gửi 🚀</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Confirm Payment -->
+      <section id="confirm-payment-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Xác Nhận Thanh Toán (Duyệt Minh Chứng)</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Số tiền</th>
+                <th>Thời gian gửi</th>
+                <th>Minh chứng</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="staff-pending-confirm-tbody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 5: Products (Read-Only) -->
+      <section id="products-tab" class="dashboard-tab-content">
+        <div class="dashboard-actions-header">
+          <h2 class="tab-pane-title" style="margin-bottom: 0;">Quản Lý Sản Phẩm (Chỉ Xem)</h2>
+          <div class="dashboard-search-filters">
+            <input type="text" id="product-search" class="form-control" placeholder="Tìm kiếm theo code, tên...">
+            <select id="product-game-filter" class="form-control" style="width: 150px;">
+              <option value="">Tất cả game</option>
+              <option value="lien_quan">Liên Quân</option>
+              <option value="free_fire">Free Fire</option>
+              <option value="fifa_mobile">FIFA Mobile</option>
+              <option value="lol">LMHT</option>
+              <option value="pubg">PUBG</option>
+            </select>
+            <select id="product-status-filter" class="form-control" style="width: 150px;">
+              <option value="">Tất cả trạng thái</option>
+              <option value="available">Còn hàng</option>
+              <option value="reserved">Tạm giữ</option>
+              <option value="sold">Đã bán</option>
+              <option value="hidden">Tạm ẩn</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã Nick</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Game</th>
+                <th>Giá</th>
+                <th>Trạng Thế</th>
+                <th>Ngày Tạo</th>
+                <th>Hành Động</th>
+              </tr>
+            </thead>
+            <tbody id="staff-products-tbody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-container" id="staff-products-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;"></div>
+      </section>
+
+      <!-- Tab 6: Tạo đơn thủ công -->
+      <section id="manual-order-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Tạo Đơn Hàng Thủ Công</h2>
+        
+        <div class="manual-order-container glass" style="max-width: 800px; margin: 0 auto; padding: 30px;">
+          <div class="step-indicator" style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+            <span id="step-indicator-1" class="step-badge active">1. Khách Hàng</span>
+            <span id="step-indicator-2" class="step-badge">2. Chọn Nick</span>
+            <span id="step-indicator-3" class="step-badge">3. Thanh Toán</span>
+          </div>
+          
+          <div id="manual-step-1" class="order-step-content">
+            <h3>Bước 1: Thông tin khách hàng</h3>
+            <div class="form-group" style="margin-top: 15px;">
+              <label>Họ tên khách hàng <span style="color: var(--error);">*</span></label>
+              <input type="text" id="manual-customer-name" class="form-control" placeholder="Nhập họ tên khách..." required>
+            </div>
+            <div class="form-group">
+              <label>Số điện thoại <span style="color: var(--error);">*</span></label>
+              <input type="text" id="manual-customer-phone" class="form-control" placeholder="Nhập số điện thoại..." required>
+            </div>
+            <div class="form-group">
+              <label>Email khách hàng</label>
+              <input type="email" id="manual-customer-email" class="form-control" placeholder="Nhập email...">
+            </div>
+            <div class="form-group">
+              <label>Ghi chú của khách</label>
+              <textarea id="manual-customer-note" class="form-control" rows="3" placeholder="Yêu cầu riêng của khách..."></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <button type="button" class="btn btn-cyan" onclick="nextManualStep(2)">Tiếp theo ➡️</button>
+            </div>
+          </div>
+
+          <div id="manual-step-2" class="order-step-content" style="display: none;">
+            <h3>Bước 2: Chọn nick game</h3>
+            <div class="form-group" style="margin-top: 15px; position: relative;">
+              <label>Tìm nick game (nhập tên, code, game...)</label>
+              <input type="text" id="manual-search-nick" class="form-control" placeholder="Tìm theo mã hoặc tên nick...">
+              <div id="manual-search-results" class="search-results-dropdown glass" style="display: none; position: absolute; width: 100%; z-index: 10; max-height: 250px; overflow-y: auto; background: var(--bg-tertiary);"></div>
+            </div>
+            
+            <h4 style="margin-top: 20px; color: var(--accent-purple);">Nick đã chọn</h4>
+            <div class="table-responsive" style="margin-top: 10px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã Nick</th>
+                    <th>Tên Nick</th>
+                    <th>Giá</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="manual-selected-tbody">
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">Chưa chọn nick nào</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="text-align: right; margin-top: 15px; font-weight: bold; font-size: 1.1rem;">
+              Tổng tiền: <span id="manual-total-price" style="color: var(--accent-cyan);">0đ</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+              <button type="button" class="btn btn-outline" onclick="prevManualStep(1)">⬅️ Quay lại</button>
+              <button type="button" class="btn btn-cyan" onclick="nextManualStep(3)">Tiếp theo ➡️</button>
+            </div>
+          </div>
+
+          <div id="manual-step-3" class="order-step-content" style="display: none;">
+            <h3>Bước 3: Phương thức thanh toán</h3>
+            <div class="form-group" style="margin-top: 15px;">
+              <label>Phương thức thanh toán</label>
+              <select id="manual-payment-method" class="form-control">
+                <option value="cash">Tiền mặt tại chỗ</option>
+                <option value="bank_transfer">Chuyển khoản</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ghi chú của nhân viên</label>
+              <textarea id="manual-staff-note" class="form-control" rows="3" placeholder="Nhập ghi chú thanh toán nội bộ..."></textarea>
+            </div>
+            
+            <div id="manual-order-summary-details" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--border-color);">
+              <!-- Summary of selected accounts will be dynamically rendered here -->
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 25px;">
+              <button type="button" class="btn btn-outline" onclick="prevManualStep(2)">⬅️ Quay lại</button>
+              <button type="button" class="btn btn-purple" onclick="submitManualOrder()">Tạo Đơn Hàng 🧾</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 7: Bàn giao nick -->
+      <section id="direct-handover-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Bàn Giao Nick Cho Khách Vãng Lai</h2>
+        
+        <div class="direct-handover-container glass" style="max-width: 800px; margin: 0 auto; padding: 30px;">
+          <div class="step-indicator" style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+            <span id="handover-indicator-1" class="step-badge active">1. Chọn Nick</span>
+            <span id="handover-indicator-2" class="step-badge">2. Nhập Khách Hàng</span>
+            <span id="handover-indicator-3" class="step-badge">3. Bàn Giao</span>
+          </div>
+          
+          <div id="handover-step-1" class="handover-step-content">
+            <h3>Bước 1: Tìm kiếm tài khoản game</h3>
+            <div class="form-group" style="margin-top: 15px; position: relative;">
+              <label>Tìm kiếm nick (mã nick, tên...)</label>
+              <input type="text" id="handover-search-nick" class="form-control" placeholder="Nhập code hoặc tên nick cần bàn giao...">
+              <div id="handover-search-results" class="search-results-dropdown glass" style="display: none; position: absolute; width: 100%; z-index: 10; max-height: 250px; overflow-y: auto; background: var(--bg-tertiary);"></div>
+            </div>
+            <div id="handover-selected-nick-preview" style="display: none; background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--accent-cyan); margin-top: 20px;">
+              <!-- Handover selected nick description -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <button type="button" class="btn btn-cyan" id="handover-to-step2-btn" disabled onclick="nextHandoverStep(2)">Tiếp theo ➡️</button>
+            </div>
+          </div>
+          
+          <div id="handover-step-2" class="handover-step-content" style="display: none;">
+            <h3>Bước 2: Nhập thông tin khách hàng nhận nick</h3>
+            <div class="form-group" style="margin-top: 15px;">
+              <label>Họ tên khách hàng <span style="color: var(--error);">*</span></label>
+              <input type="text" id="handover-customer-name" class="form-control" placeholder="Nhập họ tên khách..." required>
+            </div>
+            <div class="form-group">
+              <label>Số điện thoại <span style="color: var(--error);">*</span></label>
+              <input type="text" id="handover-customer-phone" class="form-control" placeholder="Nhập số điện thoại..." required>
+            </div>
+            <div class="form-group">
+              <label>Phương thức thanh toán</label>
+              <select id="handover-payment-method" class="form-control">
+                <option value="cash">Tiền mặt tại chỗ</option>
+                <option value="bank_transfer">Chuyển khoản ngân hàng</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ghi chú</label>
+              <textarea id="handover-customer-note" class="form-control" rows="3" placeholder="Nhập ghi chú..."></textarea>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+              <button type="button" class="btn btn-outline" onclick="prevHandoverStep(1)">⬅️ Quay lại</button>
+              <button type="button" class="btn btn-purple" onclick="confirmHandoverOrder()">Xác nhận bàn giao 🔑</button>
+            </div>
+          </div>
+          
+          <div id="handover-step-3" class="handover-step-content" style="display: none;">
+            <div style="border: 2px dashed var(--error); padding: 20px; border-radius: 8px; background: rgba(239,68,68,0.05); margin-bottom: 20px; text-align: center;">
+              <h3 style="color: var(--error); margin-bottom: 10px;">⚠️ LƯU Ý BẢO MẬT QUAN TRỌNG</h3>
+              <p>Thông tin đăng nhập nick chỉ hiển thị 1 lần duy nhất trên màn hình này. Hãy đọc hoặc copy cho khách hàng ngay lập tức trước khi đóng hoặc reset form.</p>
+            </div>
+            
+            <div id="handover-result-details" class="glass" style="padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <!-- Handover credential details -->
+            </div>
+            
+            <div style="display: flex; justify-content: center; margin-top: 25px;">
+              <button type="button" class="btn btn-cyan" onclick="resetHandoverForm()">Đã đọc thông tin cho khách — Xác nhận bàn giao</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Messages from support contact form -->
+      <section id="contacts-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Tin Nhắn Hỗ Trợ Gửi Từ Khách</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Khách hàng</th>
+                <th>Chủ đề</th>
+                <th>Nội dung liên hệ</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="staff-contacts-tbody">
+              <!-- contacts messages -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Confirm Payment Proof & Credentials deliver Modal overlay -->
+  <div id="staff-order-modal-overlay" class="modal-overlay">
+    <div class="modal-content glass" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 id="modal-order-code-title">ĐƠN HÀNG: ORD</h3>
+        <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="staff-order-modal-body">
+        <!-- populated dynamically via js -->
+      </div>
+      <div class="modal-footer" id="staff-order-modal-footer">
+        <!-- confirm or deliver actions -->
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/staff-dashboard.js"></script>
+</body>
+</html>

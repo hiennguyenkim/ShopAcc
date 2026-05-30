@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết tài khoản - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .specs-grid-game {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .spec-item-game {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .spec-item-game p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .spec-item-game h4 {
+      font-size: 1.2rem;
+      color: var(--accent-cyan);
+      margin-top: 5px;
+    }
+    .review-item {
+      padding: 15px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 15px;
+    }
+    .review-item:last-child {
+      border-bottom: none;
+    }
+    .rating-stars {
+      color: var(--accent-gold);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html" class="glow-text-cyan">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Product Detail Page Layout -->
+  <div id="product-detail-container" class="detail-layout" style="display: none;">
+    <!-- Main Info & Gallery -->
+    <div>
+      <div class="gallery-main">
+        <img id="main-gallery-img" src="" alt="Main Gallery">
+      </div>
+      <div id="gallery-thumbs-list" class="gallery-thumbs">
+        <!-- thumbs -->
+      </div>
+
+      <!-- Specs Card -->
+      <div class="glass" style="padding: 30px; margin-top: 30px;">
+        <h2 style="font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Thông Số Chi Tiết</h2>
+        
+        <div class="detail-specs">
+          <div class="spec-card">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">MÃ NICK</p>
+            <div id="spec-code" class="spec-value"></div>
+          </div>
+          <div class="spec-card">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">SERVER</p>
+            <div id="spec-server" class="spec-value"></div>
+          </div>
+          <div class="spec-card">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">LEVEL</p>
+            <div id="spec-level" class="spec-value"></div>
+          </div>
+          <div class="spec-card">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">RANK</p>
+            <div id="spec-rank" class="spec-value"></div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 30px; font-weight: 600; color: var(--accent-cyan);">Đặc điểm nổi bật của game</h3>
+        <div id="game-attributes-container" class="specs-grid-game">
+          <!-- Game Specific Specs populated dynamically -->
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h3 style="font-weight: 600; margin-bottom: 10px;">Mô tả chi tiết</h3>
+          <p id="product-description" style="color: var(--text-muted); white-space: pre-line;"></p>
+        </div>
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="glass" style="padding: 30px; margin-top: 30px;">
+        <h2 style="font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px;">Đánh Giá Từ Người Mua</h2>
+        <div id="reviews-list-container">
+          <!-- Reviews list -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Purchase Sidebar Card -->
+    <aside>
+      <div class="glass detail-info-card">
+        <span id="detail-badge" class="game-badge" style="position: static; display: inline-block; margin-bottom: 15px;">Game</span>
+        <h1 id="detail-title" style="font-size: 1.6rem; font-weight: 700; margin-bottom: 20px;">Tên tài khoản game</h1>
+        
+        <div class="price-card">
+          <p class="price-label">Giá bán</p>
+          <div class="price-row">
+            <span id="detail-price" class="detail-current-price">0đ</span>
+            <span id="detail-old-price" class="detail-old-price"></span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+          <p style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">🛡️ Chính sách bảo hành: <span id="detail-warranty" style="color: white; font-weight: 500;">0 ngày</span></p>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">⚡ Giao dịch: <span style="color: var(--success); font-weight: 500;">An toàn 100% & Tự động</span></p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="buy-now-detail" class="btn btn-cyan" style="width: 100%; font-size: 1.1rem; padding: 12px 24px;">
+            Mua ngay ⚡
+          </button>
+          <button id="add-to-cart-detail" class="btn btn-outline" style="width: 100%; font-size: 1.1rem; padding: 12px 24px;">
+            Thêm Vào Giỏ Hàng 🛒
+          </button>
+          <button id="wishlist-detail" class="btn btn-outline" style="width: 100%; font-size: 1.1rem; padding: 12px 24px; border-color: var(--accent-pink); color: var(--accent-pink);">
+            🤍 Thêm vào yêu thích
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="loading-placeholder" style="text-align: center; padding: 100px;">
+    <h2>Đang tải thông tin chi tiết nick game...</h2>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    let currentGameAccount = null;
+
+    document.addEventListener('DOMContentLoaded', loadProductDetail);
+
+    async function loadProductDetail() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('slug');
+
+      if (!slug) {
+        window.location.href = '/products.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/game-accounts/slug/${slug}`);
+        const data = await res.json();
+
+        if (data.success && data.gameAccount) {
+          currentGameAccount = data.gameAccount;
+          displayDetails(data.gameAccount);
+          loadReviews(data.gameAccount._id);
+          
+          document.getElementById('loading-placeholder').style.display = 'none';
+          document.getElementById('product-detail-container').style.display = 'grid';
+        } else {
+          window.location.href = '/404.html';
+        }
+      } catch (err) {
+        console.error(err);
+        window.location.href = '/404.html';
+      }
+    }
+
+    function displayDetails(acc) {
+      document.getElementById('detail-title').textContent = acc.name;
+      document.getElementById('spec-code').textContent = acc.code;
+      document.getElementById('spec-server').textContent = acc.server || 'Asia';
+      document.getElementById('spec-level').textContent = acc.level || 'N/A';
+      document.getElementById('spec-rank').textContent = acc.rank || 'N/A';
+      document.getElementById('product-description').textContent = acc.description || 'Chưa có mô tả chi tiết.';
+      document.getElementById('detail-price').textContent = `${acc.price.toLocaleString('vi-VN')}đ`;
+      
+      if (acc.oldPrice) {
+        document.getElementById('detail-old-price').textContent = `${acc.oldPrice.toLocaleString('vi-VN')}đ`;
+      } else {
+        document.getElementById('detail-old-price').textContent = '';
+      }
+
+      document.getElementById('detail-warranty').textContent = `${acc.warrantyDays || 0} ngày`;
+
+      const gameTypeNames = {
+        lien_quan: 'Liên Quân',
+        free_fire: 'Free Fire',
+        fifa_mobile: 'FIFA Mobile',
+        lol: 'LMHT',
+        pubg: 'PUBG'
+      };
+      document.getElementById('detail-badge').textContent = gameTypeNames[acc.gameType] || acc.gameType;
+
+      // Gallery display
+      const mainImg = document.getElementById('main-gallery-img');
+      const thumbsContainer = document.getElementById('gallery-thumbs-list');
+      
+      const imagesList = acc.images.length > 0 ? acc.images : ['https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1470&auto=format&fit=crop'];
+      mainImg.src = imagesList[0];
+
+      thumbsContainer.innerHTML = '';
+      imagesList.forEach((imgSrc, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = `gallery-thumb ${idx === 0 ? 'active' : ''}`;
+        thumb.innerHTML = `<img src="${imgSrc}">`;
+        thumb.onclick = () => {
+          document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+          mainImg.src = imgSrc;
+        };
+        thumbsContainer.appendChild(thumb);
+      });
+
+      // Buy action button
+      document.getElementById('add-to-cart-detail').onclick = () => {
+        window.addToCart(acc);
+      };
+
+      document.getElementById('buy-now-detail').onclick = async () => {
+        try {
+          const res = await fetch('/api/auth/me');
+          const data = await res.json();
+          if (data.success && data.user) {
+            window.location.href = `/checkout.html?accountId=${acc._id}&mode=buynow`;
+          } else {
+            window.showToast('Vui lòng đăng nhập để mua tài khoản.', 'warning');
+            setTimeout(() => {
+              window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            }, 1000);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      // Wishlist toggle button logic
+      let inWishlist = false;
+      const wishlistBtn = document.getElementById('wishlist-detail');
+
+      const checkWishlist = async () => {
+        try {
+          const meRes = await fetch('/api/auth/me');
+          const meData = await meRes.json();
+          if (meRes.status === 200 && meData.success && meData.user) {
+            const wishRes = await fetch('/api/wishlist');
+            const wishData = await wishRes.json();
+            if (wishRes.status === 200 && wishData.success && wishData.wishlist) {
+              inWishlist = wishData.wishlist.some(w => (w._id || w) === acc._id);
+              updateWishlistBtnUI();
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      const updateWishlistBtnUI = () => {
+        if (inWishlist) {
+          wishlistBtn.innerHTML = '❤️ Đã yêu thích';
+        } else {
+          wishlistBtn.innerHTML = '🤍 Thêm vào yêu thích';
+        }
+      };
+
+      wishlistBtn.onclick = async () => {
+        try {
+          const res = await fetch('/api/auth/me');
+          const data = await res.json();
+          if (!data.success || !data.user) {
+            window.showToast('Đăng nhập để lưu yêu thích.', 'warning');
+            return;
+          }
+
+          const toggleRes = await fetch('/api/wishlist/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accountId: acc._id })
+          });
+          const toggleData = await toggleRes.json();
+          if (toggleData.success) {
+            window.showToast(toggleData.message, 'success');
+            inWishlist = toggleData.action === 'added';
+            updateWishlistBtnUI();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      checkWishlist();
+
+      // Game Specific Attributes
+      const attribsContainer = document.getElementById('game-attributes-container');
+      attribsContainer.innerHTML = '';
+
+      if (acc.gameType === 'lien_quan' && acc.lienQuanInfo) {
+        const info = acc.lienQuanInfo;
+        appendSpecItem('Tướng', info.heroCount);
+        appendSpecItem('Trang phục', info.skinCount);
+        appendSpecItem('Quân Huy', info.quanHuy);
+        appendSpecItem('Ruby', info.ruby);
+        appendSpecItem('Trang phục SS', info.skinSSCount);
+        appendSpecItem('Trang phục S', info.skinSCount);
+      } else if (acc.gameType === 'free_fire' && acc.freeFireInfo) {
+        const info = acc.freeFireInfo;
+        appendSpecItem('Nhân vật', info.characterCount);
+        appendSpecItem('Trang phục', info.outfitCount);
+        appendSpecItem('Skin súng', info.gunSkinCount);
+        appendSpecItem('Kim cương', info.diamond);
+      } else if (acc.gameType === 'fifa_mobile' && acc.fifaInfo) {
+        const info = acc.fifaInfo;
+        appendSpecItem('Chỉ số OVR', info.ovr);
+        appendSpecItem('Giá trị đội', `${info.teamValue ? info.teamValue.toLocaleString('vi-VN') : 0} xu`);
+        appendSpecItem('Cầu thủ', info.playerCount);
+        appendSpecItem('Coins', info.coins);
+      } else if (acc.gameType === 'lol' && acc.lolInfo) {
+        const info = acc.lolInfo;
+        appendSpecItem('Tướng', info.championCount);
+        appendSpecItem('Trang phục', info.skinCount);
+        appendSpecItem('RP', info.rp);
+        appendSpecItem('Tinh hoa lam', info.blueEssence);
+      } else if (acc.gameType === 'pubg' && acc.pubgInfo) {
+        const info = acc.pubgInfo;
+        appendSpecItem('Bộ trang phục', info.outfitCount);
+        appendSpecItem('Skin súng', info.gunSkinCount);
+        appendSpecItem('Skin xe', info.vehicleSkinCount);
+        appendSpecItem('UC', info.uc);
+      }
+    }
+
+    function appendSpecItem(label, val) {
+      const container = document.getElementById('game-attributes-container');
+      const spec = document.createElement('div');
+      spec.className = 'spec-item-game';
+      spec.innerHTML = `
+        <p>${label}</p>
+        <h4>${val || 0}</h4>
+      `;
+      container.appendChild(spec);
+    }
+
+    async function loadReviews(accountId) {
+      try {
+        const res = await fetch(`/api/reviews/account/${accountId}`);
+        const data = await res.json();
+        
+        const container = document.getElementById('reviews-list-container');
+        container.innerHTML = '';
+
+        if (data.success && data.reviews.length > 0) {
+          data.reviews.forEach(rev => {
+            const item = document.createElement('div');
+            item.className = 'review-item glass';
+            
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+              stars += i <= rev.rating ? '★' : '☆';
+            }
+
+            item.innerHTML = `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-weight: 600;">${rev.user.fullName} (@${rev.user.username})</span>
+                <span class="rating-stars">${stars}</span>
+              </div>
+              <p style="color: var(--text-muted);">${rev.comment}</p>
+              <small style="color: rgba(255,255,255,0.3); font-size: 0.75rem; display: block; margin-top: 5px;">
+                ${new Date(rev.createdAt).toLocaleDateString('vi-VN')}
+              </small>
+            `;
+            container.appendChild(item);
+          });
+        } else {
+          container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Tài khoản này chưa có đánh giá nào.</p>';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>

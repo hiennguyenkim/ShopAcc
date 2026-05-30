@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ - Câu hỏi thường gặp - GameNick Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .faq-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .faq-item {
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+    .faq-question {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/index.html" class="logo">
+        🎮 <span class="logo-accent">GameNick</span>Store
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Trang chủ</a></li>
+          <li><a href="/products.html">Cửa hàng Nick</a></li>
+          <li><a href="/collections.html">Bộ sưu tập</a></li>
+          <li><a href="/order-tracking.html">Tra cứu đơn</a></li>
+          <li><a href="/contact.html">Liên hệ</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-icon-btn" onclick="window.location.href='/cart.html'">
+          🛒 <span id="cart-badge" class="cart-badge">0</span>
+        </button>
+        <div id="user-actions" style="display: flex; gap: 10px;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FAQ items -->
+  <div class="faq-container">
+    <div class="section-title">
+      <h2>Câu Hỏi Thường Gặp</h2>
+      <p>Giải đáp nhanh những câu hỏi phổ biến từ khách hàng</p>
+    </div>
+
+    <div class="glass faq-item">
+      <div class="faq-question">Q: Khi mua nick xong tôi sẽ nhận tài khoản ở đâu?</div>
+      <p style="color: var(--text-muted);">A: Sau khi đơn hàng hoàn thành (Hệ thống hoặc nhân viên xác nhận thanh toán thành công), bạn hãy đăng nhập vào Bảng điều khiển khách hàng (User Dashboard), chọn xem chi tiết đơn hàng tương ứng để nhận ngay thông tin đăng nhập nick game.</p>
+    </div>
+
+    <div class="glass faq-item">
+      <div class="faq-question">Q: Làm sao để tôi tin tưởng giao dịch tại đây?</div>
+      <p style="color: var(--text-muted);">A: GameNick Store cam kết bảo mật 100% thông tin khách hàng, giao dịch tự động nhanh chóng và luôn có đội ngũ nhân viên trực hỗ trợ 24/7. Mọi giao dịch nạp tiền, mua nick đều có mã đơn và lịch sử rõ ràng.</p>
+    </div>
+
+    <div class="glass faq-item">
+      <div class="faq-question">Q: Số dư ví cá nhân dùng để làm gì?</div>
+      <p style="color: var(--text-muted);">A: Bạn có thể nạp tiền vào số dư ví cá nhân để mua nick game ngay lập tức mà không cần up ảnh minh chứng chuyển khoản. Hệ thống sẽ tự động trừ số dư và bàn giao nick chỉ trong 3 giây.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GameNick Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/toast.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
