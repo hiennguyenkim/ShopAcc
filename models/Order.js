@@ -16,7 +16,14 @@ const orderSchema = new mongoose.Schema({
     gameType: { type: String, required: true },
     image: { type: String },
     price: { type: Number, required: true },
-    subtotal: { type: Number, required: true }
+    subtotal: { type: Number, required: true },
+    deliveredCredentials: {
+      username: { type: String },
+      password: { type: String },
+      loginMethod: { type: String },
+      linkedEmail: { type: String },
+      securityNote: { type: String }
+    }
   }],
   subtotal: { type: Number, required: true, min: 0 },
   discountAmount: { type: Number, default: 0, min: 0 },

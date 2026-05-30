@@ -482,64 +482,33 @@ async function initUserChat() {
     chatIntervalId = null;
   }
 
-  try {
-    const res = await fetch('/api/chat/staff-list');
-    const data = await res.json();
-    
-    const select = document.getElementById('chat-staff-select');
-    select.innerHTML = '';
+  // Hide the staff select area since customer connects directly to their room
+  const selectorArea = document.getElementById('chat-staff-selector-area');
+  if (selectorArea) selectorArea.style.display = 'none';
 
-    if (data.success && data.staffList.length > 0) {
-      data.staffList.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s._id;
-        opt.textContent = `${s.fullName} (${s.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'})`;
-        select.appendChild(opt);
-      });
+  await loadChatMessages();
+  chatIntervalId = setInterval(loadChatMessages, 5000);
 
-      select.onchange = () => {
-        activeReceiverId = select.value;
-        loadChatMessages();
-      };
+  const sendBtn = document.getElementById('user-chat-send-btn');
+  const input = document.getElementById('user-chat-input');
 
-      activeReceiverId = select.value;
-      await loadChatMessages();
-
-      chatIntervalId = setInterval(loadChatMessages, 5000);
-    } else {
-      select.innerHTML = '<option value="">Không có nhân viên trực hỗ trợ</option>';
-      document.getElementById('user-chat-messages').innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 50px;">Hiện tại hệ thống chưa có nhân viên hỗ trợ trực tuyến.</p>';
+  sendBtn.onclick = handleUserSend;
+  input.onkeypress = (e) => {
+    if (e.key === 'Enter') {
+      handleUserSend();
     }
-
-    const sendBtn = document.getElementById('user-chat-send-btn');
-    const input = document.getElementById('user-chat-input');
-
-    sendBtn.onclick = handleUserSend;
-    input.onkeypress = (e) => {
-      if (e.key === 'Enter') {
-        handleUserSend();
-      }
-    };
-  } catch (err) {
-    console.error(err);
-  }
+  };
 }
 
 async function loadChatMessages() {
-  if (!activeReceiverId) return;
+  if (!currentUser) return;
 
   try {
-    const res = await fetch(`/api/chat/messages?with=${activeReceiverId}&limit=50`);
+    const res = await fetch(`/api/chat/room/${currentUser._id}`);
     const data = await res.json();
     
     if (data.success) {
       renderChatBubbles(data.messages);
-      
-      await fetch('/api/chat/read', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senderId: activeReceiverId })
-      });
     }
   } catch (err) {
     console.error(err);
@@ -559,8 +528,7 @@ function renderChatBubbles(messages) {
 
   messages.forEach(msg => {
     const bubble = document.createElement('div');
-    const msgSenderId = msg.senderId._id ? msg.senderId._id.toString() : msg.senderId.toString();
-    const isMe = msgSenderId === currentUser._id.toString();
+    const isMe = msg.senderRole === 'customer';
     
     bubble.style.cssText = `
       display: flex;
@@ -573,12 +541,14 @@ function renderChatBubbles(messages) {
       max-width: 70%;
       border-bottom-${isMe ? 'right' : 'left'}-radius: 2px;
       word-break: break-word;
+      margin-bottom: 10px;
     `;
 
     const timeStr = new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     bubble.innerHTML = `
-      <div style="font-size: 0.95rem;">${msg.content}</div>
+      <div style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 2px; font-weight: bold; color: ${isMe ? 'inherit' : 'var(--accent-cyan)'};">${msg.senderName} (${msg.senderRole === 'admin' ? 'QTV' : msg.senderRole === 'staff' ? 'NV' : 'Khách'})</div>
+      <div style="font-size: 0.95rem;">${msg.message}</div>
       <div style="font-size: 0.7rem; opacity: 0.6; text-align: right; margin-top: 4px;">${timeStr}</div>
     `;
 
@@ -593,14 +563,18 @@ function renderChatBubbles(messages) {
 async function handleUserSend() {
   const input = document.getElementById('user-chat-input');
   const content = input.value.trim();
-  if (!content || !activeReceiverId) return;
+  if (!content || !currentUser) return;
 
   try {
     input.value = '';
     const res = await fetch('/api/chat/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ receiverId: activeReceiverId, content })
+      body: JSON.stringify({
+        chatRoomId: currentUser._id,
+        message: content,
+        senderName: currentUser.fullName
+      })
     });
     const data = await res.json();
     if (data.success) {

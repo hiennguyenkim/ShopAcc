@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt } = require('../utils/cryptoHelper');
 
 const gameAccountSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true, uppercase: true, trim: true },
@@ -81,6 +82,18 @@ const gameAccountSchema = new mongoose.Schema({
   soldAt: { type: Date }
 }, {
   timestamps: true
+});
+
+// Pre-save hook to encrypt password
+gameAccountSchema.pre('save', function(next) {
+  if (this.isModified('loginInfo.password')) {
+    const pwd = this.loginInfo.password;
+    // Only encrypt if it is not already encrypted (does not contain ':')
+    if (pwd && !pwd.includes(':')) {
+      this.loginInfo.password = encrypt(pwd);
+    }
+  }
+  next();
 });
 
 module.exports = mongoose.model('GameAccount', gameAccountSchema);

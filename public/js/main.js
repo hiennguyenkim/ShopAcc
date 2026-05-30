@@ -15,41 +15,42 @@ async function checkUserSession() {
     if (data.success && data.user) {
       currentUser = data.user;
 
-      // Initialize floating chat FAB on public pages (not dashboards)
-      const isDashboardPage = window.location.pathname.includes('dashboard.html');
-      if (!isDashboardPage) {
-        initFloatingChat();
+      const userActions = document.getElementById('user-actions');
+      if (userActions) {
+        let dashboardUrl = '/user-dashboard.html';
+        if (currentUser.role === 'admin') {
+          dashboardUrl = '/admin-dashboard.html';
+        } else if (currentUser.role === 'staff') {
+          dashboardUrl = '/staff-dashboard.html';
+        }
+
+        userActions.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="${dashboardUrl}" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">
+              👤 ${currentUser.fullName} <span class="header-balance">(${currentUser.balance.toLocaleString('vi-VN')}đ)</span>
+            </a>
+            <button id="logoutBtn" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; border-color: var(--error); color: var(--error);">
+              Đăng xuất
+            </button>
+          </div>
+        `;
+
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+      }
+    } else {
+      const userActions = document.getElementById('user-actions');
+      if (userActions) {
+        userActions.innerHTML = `
+          <a href="/login.html" class="btn btn-outline">Đăng nhập</a>
+          <a href="/register.html" class="btn btn-cyan">Đăng ký</a>
+        `;
       }
     }
 
-    const userActions = document.getElementById('user-actions');
-    if (!userActions) return;
-
-    if (data.success && data.user) {
-      let dashboardUrl = '/user-dashboard.html';
-      if (currentUser.role === 'admin') {
-        dashboardUrl = '/admin-dashboard.html';
-      } else if (currentUser.role === 'staff') {
-        dashboardUrl = '/staff-dashboard.html';
-      }
-
-      userActions.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 15px;">
-          <a href="${dashboardUrl}" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">
-            👤 ${currentUser.fullName} <span class="header-balance">(${currentUser.balance.toLocaleString('vi-VN')}đ)</span>
-          </a>
-          <button id="logoutBtn" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; border-color: var(--error); color: var(--error);">
-            Đăng xuất
-          </button>
-        </div>
-      `;
-
-      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    } else {
-      userActions.innerHTML = `
-        <a href="/login.html" class="btn btn-outline">Đăng nhập</a>
-        <a href="/register.html" class="btn btn-cyan">Đăng ký</a>
-      `;
+    // Initialize floating chat FAB on public pages (not dashboards) for both guests and members
+    const isDashboardPage = window.location.pathname.includes('dashboard.html');
+    if (!isDashboardPage) {
+      initFloatingChat();
     }
   } catch (error) {
     console.error('Session check failed:', error);
@@ -130,24 +131,35 @@ async function loadSiteSettings() {
 // FLOATING CHAT WIDGET CSKH FOR CLIENTS
 // ----------------------------------------------------
 let floatingChatInterval = null;
-let floatingUnreadInterval = null;
-let floatingActiveStaffId = null;
+let chatRoomId = localStorage.getItem('chat_room_id');
+if (!chatRoomId) {
+  chatRoomId = 'room_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+  localStorage.setItem('chat_room_id', chatRoomId);
+}
+let senderName = localStorage.getItem('chat_sender_name') || 'Khách vãng lai';
 
 async function initFloatingChat() {
+  // Sync details if logged in
+  if (currentUser) {
+    chatRoomId = currentUser._id;
+    senderName = currentUser.fullName || currentUser.username;
+    localStorage.setItem('chat_room_id', chatRoomId);
+    localStorage.setItem('chat_sender_name', senderName);
+  }
+
   // Inject HTML structure for floating FAB and popup
   const chatHtml = `
    <div id="floating-chat-fab" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000; cursor: pointer; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,240,255,0.4); transition: var(--transition);">
      <span style="font-size: 1.8rem; color: black;">💬</span>
-     <span id="floating-chat-badge" style="position: absolute; top: -5px; right: -5px; background: var(--error); color: white; font-size: 0.75rem; width: 20px; height: 20px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold;">0</span>
    </div>
    <div id="floating-chat-popup" class="glass" style="position: fixed; bottom: 100px; right: 30px; z-index: 1000; width: 350px; height: 450px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); animation: modalFadeIn 0.3s ease;">
      <div style="padding: 15px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
-       <h4 style="color: var(--accent-cyan); font-weight: bold;">Chat CSKH</h4>
+       <h4 style="color: var(--accent-cyan); font-weight: bold;">Hỗ trợ trực tuyến</h4>
        <button id="floating-chat-close" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">&times;</button>
      </div>
-     <div id="floating-chat-staff-selector" style="padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
-       <label for="floating-chat-select" style="color: var(--text-muted); white-space: nowrap;">Hỗ trợ viên:</label>
-       <select id="floating-chat-select" class="form-control" style="padding: 4px 8px; height: 30px; width: auto; font-size: 0.8rem; color: white; background: rgba(0,0,0,0.5);"></select>
+     <div id="floating-chat-name-area" style="padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+       <label for="floating-chat-sender-name" style="color: var(--text-muted); white-space: nowrap;">Tên bạn:</label>
+       <input type="text" id="floating-chat-sender-name" class="form-control" style="padding: 2px 8px; height: 26px; font-size: 0.8rem; color: white; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 4px;" value="${senderName}">
      </div>
      <div id="floating-chat-messages" style="flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2);">
        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: auto;">Đang kết nối...</p>
@@ -166,32 +178,17 @@ async function initFloatingChat() {
   const fab = document.getElementById('floating-chat-fab');
   const popup = document.getElementById('floating-chat-popup');
   const closeBtn = document.getElementById('floating-chat-close');
-  const select = document.getElementById('floating-chat-select');
+  const nameInput = document.getElementById('floating-chat-sender-name');
   const sendBtn = document.getElementById('floating-chat-send');
   const input = document.getElementById('floating-chat-input');
 
-  // Load active support team list
-  try {
-    const res = await fetch('/api/chat/staff-list');
-    const data = await res.json();
-    if (data.success && data.staffList.length > 0) {
-      select.innerHTML = '';
-      data.staffList.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s._id;
-        opt.textContent = `${s.name} (${s.role === 'admin' ? 'QTV' : 'Staff'})`;
-        select.appendChild(opt);
-      });
-      floatingActiveStaffId = select.value;
-      select.onchange = () => {
-        floatingActiveStaffId = select.value;
-        loadFloatingMessages();
-      };
-    } else {
-      select.innerHTML = '<option value="">Không có support online</option>';
-    }
-  } catch (err) {
-    console.error(err);
+  if (currentUser) {
+    nameInput.disabled = true; // Registered users cannot change name
+  } else {
+    nameInput.addEventListener('change', () => {
+      senderName = nameInput.value.trim() || 'Khách vãng lai';
+      localStorage.setItem('chat_sender_name', senderName);
+    });
   }
 
   // Toggle active chat view
@@ -215,30 +212,6 @@ async function initFloatingChat() {
   input.onkeypress = (e) => {
     if (e.key === 'Enter') sendFloatingMessage();
   };
-
-  // Poll unread badge count instantly
-  pollUnreadCount();
-  floatingUnreadInterval = setInterval(pollUnreadCount, 5000);
-}
-
-async function pollUnreadCount() {
-  const badge = document.getElementById('floating-chat-badge');
-  if (!badge) return;
-
-  try {
-    const res = await fetch('/api/chat/unread-count');
-    const data = await res.json();
-    if (data.success) {
-      if (data.count > 0) {
-        badge.textContent = data.count;
-        badge.style.display = 'flex';
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
 }
 
 function startFloatingMessagePolling() {
@@ -254,20 +227,11 @@ function stopFloatingMessagePolling() {
 }
 
 async function loadFloatingMessages() {
-  if (!floatingActiveStaffId) return;
   try {
-    const res = await fetch(`/api/chat/messages?with=${floatingActiveStaffId}&limit=50`);
+    const res = await fetch(`/api/chat/room/${chatRoomId}`);
     const data = await res.json();
     if (data.success) {
       renderFloatingBubbles(data.messages);
-      
-      // Mark read
-      await fetch('/api/chat/read', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senderId: floatingActiveStaffId })
-      });
-      pollUnreadCount();
     }
   } catch (err) {
     console.error(err);
@@ -287,8 +251,7 @@ function renderFloatingBubbles(messages) {
 
   messages.forEach(msg => {
     const bubble = document.createElement('div');
-    const msgSenderId = msg.senderId._id ? msg.senderId._id.toString() : msg.senderId.toString();
-    const isMe = msgSenderId === currentUser._id.toString();
+    const isMe = msg.senderRole === 'customer' || msg.senderRole === 'guest';
     
     bubble.style.cssText = `
       align-self: ${isMe ? 'flex-end' : 'flex-start'};
@@ -300,10 +263,14 @@ function renderFloatingBubbles(messages) {
       border-bottom-${isMe ? 'right' : 'left'}-radius: 2px;
       word-break: break-word;
       font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 6px;
     `;
     const timeStr = new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     bubble.innerHTML = `
-      <div>${msg.content}</div>
+      <div style="font-size: 0.65rem; opacity: 0.7; margin-bottom: 2px; font-weight: bold; color: ${isMe ? 'inherit' : 'var(--accent-cyan)'};">${msg.senderName} (${msg.senderRole === 'admin' ? 'QTV' : msg.senderRole === 'staff' ? 'NV' : 'Khách'})</div>
+      <div>${msg.message}</div>
       <div style="font-size: 0.65rem; opacity: 0.6; text-align: right; margin-top: 3px;">${timeStr}</div>
     `;
     container.appendChild(bubble);
@@ -317,14 +284,18 @@ function renderFloatingBubbles(messages) {
 async function sendFloatingMessage() {
   const input = document.getElementById('floating-chat-input');
   const content = input.value.trim();
-  if (!content || !floatingActiveStaffId) return;
+  if (!content) return;
 
   try {
     input.value = '';
     const res = await fetch('/api/chat/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ receiverId: floatingActiveStaffId, content })
+      body: JSON.stringify({
+        chatRoomId,
+        message: content,
+        senderName
+      })
     });
     const data = await res.json();
     if (data.success) {
@@ -337,3 +308,4 @@ async function sendFloatingMessage() {
 
 window.checkUserSession = checkUserSession;
 window.updateCartBadge = updateCartBadge;
+

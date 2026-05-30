@@ -2,21 +2,15 @@ const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chatController');
 const authMiddleware = require('../middleware/authMiddleware');
-const { requireAuth, requireStaff, requireAdmin } = require('../middleware/roleMiddleware');
+const { requireStaff } = require('../middleware/roleMiddleware');
 
-// Public route to list active staff/admins for customer to select
+// Public / Guest friendly routes
 router.get('/staff-list', chatController.getStaffList);
-
-// Authenticated user routes (customer, staff, admin)
-router.post('/send', authMiddleware, requireAuth, chatController.sendMessage);
-router.get('/messages', authMiddleware, requireAuth, chatController.getMessages);
-router.put('/read', authMiddleware, requireAuth, chatController.markAsRead);
-router.get('/unread-count', authMiddleware, requireAuth, chatController.getUnreadCount);
+router.post('/send', authMiddleware, chatController.sendMessage); // authMiddleware sets req.user if token is present, but doesn't block guests
+router.get('/room/:chatRoomId', chatController.getMessagesByRoom);
 
 // Staff and Admin routes
-router.get('/conversations', authMiddleware, requireStaff, chatController.getConversations);
-
-// Admin only routes
-router.get('/all-conversations', authMiddleware, requireAdmin, chatController.getAllConversations);
+router.get('/rooms', authMiddleware, requireStaff, chatController.getChatRooms);
+router.post('/room/:chatRoomId/read', authMiddleware, requireStaff, chatController.markRoomAsRead);
 
 module.exports = router;

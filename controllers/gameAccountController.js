@@ -3,6 +3,7 @@ const Category = require('../models/Category');
 const generateSlug = require('../utils/generateSlug');
 const deleteFile = require('../utils/deleteFile');
 const createAuditLog = require('../utils/createAuditLog');
+const { decrypt } = require('../utils/cryptoHelper');
 
 // Check if user is staff or admin
 const isStaffOrAdmin = (user) => {
@@ -110,16 +111,24 @@ const getGameAccounts = async (req, res, next) => {
 
     const totalPages = Math.ceil(total / limit);
 
+    const decryptedAccounts = gameAccounts.map(acc => {
+      const obj = acc.toObject();
+      if (obj.loginInfo && obj.loginInfo.password) {
+        obj.loginInfo.password = decrypt(obj.loginInfo.password);
+      }
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      count: gameAccounts.length,
+      count: decryptedAccounts.length,
       total,
       page: Number(page),
       limit: Number(limit),
       pages: totalPages,
       totalPages: totalPages,
-      gameAccounts,
-      accounts: gameAccounts
+      gameAccounts: decryptedAccounts,
+      accounts: decryptedAccounts
     });
   } catch (error) {
     next(error);
@@ -141,9 +150,25 @@ const getGameAccountById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản game.' });
     }
 
+    if (req.user && req.user.role === 'admin') {
+      await createAuditLog(
+        req.user._id,
+        'VIEW_CREDENTIALS',
+        `Xem thông tin đăng nhập của nick: ${gameAccount.code}`,
+        req.ip,
+        'GameAccount',
+        gameAccount._id
+      );
+    }
+
+    const obj = gameAccount.toObject();
+    if (obj.loginInfo && obj.loginInfo.password) {
+      obj.loginInfo.password = decrypt(obj.loginInfo.password);
+    }
+
     res.status(200).json({
       success: true,
-      gameAccount
+      gameAccount: obj
     });
   } catch (error) {
     next(error);
@@ -165,9 +190,25 @@ const getGameAccountBySlug = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản game.' });
     }
 
+    if (req.user && req.user.role === 'admin') {
+      await createAuditLog(
+        req.user._id,
+        'VIEW_CREDENTIALS',
+        `Xem thông tin đăng nhập của nick: ${gameAccount.code}`,
+        req.ip,
+        'GameAccount',
+        gameAccount._id
+      );
+    }
+
+    const obj = gameAccount.toObject();
+    if (obj.loginInfo && obj.loginInfo.password) {
+      obj.loginInfo.password = decrypt(obj.loginInfo.password);
+    }
+
     res.status(200).json({
       success: true,
-      gameAccount
+      gameAccount: obj
     });
   } catch (error) {
     next(error);
@@ -240,10 +281,15 @@ const createGameAccount = async (req, res, next) => {
 
     await createAuditLog(req.user._id, 'CREATE_GAME_ACCOUNT', `Đăng bán nick mới: ${code} (${gameType})`, req.ip);
 
+    const obj = newAccount.toObject();
+    if (obj.loginInfo && obj.loginInfo.password) {
+      obj.loginInfo.password = decrypt(obj.loginInfo.password);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Đăng bán tài khoản game thành công.',
-      gameAccount: newAccount
+      gameAccount: obj
     });
   } catch (error) {
     next(error);
@@ -339,10 +385,15 @@ const updateGameAccount = async (req, res, next) => {
 
     await createAuditLog(req.user._id, 'UPDATE_GAME_ACCOUNT', `Cập nhật thông tin nick: ${gameAccount.code}`, req.ip);
 
+    const obj = gameAccount.toObject();
+    if (obj.loginInfo && obj.loginInfo.password) {
+      obj.loginInfo.password = decrypt(obj.loginInfo.password);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Cập nhật tài khoản game thành công.',
-      gameAccount
+      gameAccount: obj
     });
   } catch (error) {
     next(error);
@@ -412,10 +463,15 @@ const updateStatus = async (req, res, next) => {
       req.ip
     );
 
+    const obj = gameAccount.toObject();
+    if (obj.loginInfo && obj.loginInfo.password) {
+      obj.loginInfo.password = decrypt(obj.loginInfo.password);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Cập nhật trạng thái thành công.',
-      gameAccount
+      gameAccount: obj
     });
   } catch (error) {
     next(error);

@@ -550,14 +550,14 @@ function stopChatPolling() {
 
 async function loadConversations(silent = false) {
   try {
-    const res = await fetch('/api/chat/conversations');
+    const res = await fetch('/api/chat/rooms');
     const data = await res.json();
     if (data.success) {
-      allConversations = data.conversations;
+      allConversations = data.rooms;
       renderConversationsList();
     }
   } catch (err) {
-    console.error('Lỗi tải cuộc hội thoại:', err);
+    console.error('Lỗi tải danh sách phòng chat:', err);
   }
 }
 
@@ -565,7 +565,7 @@ function renderConversationsList() {
   const container = document.getElementById('chat-conversations-list');
   const searchQuery = document.getElementById('chat-search-input').value.toLowerCase().trim();
 
-  const filtered = allConversations.filter(c => c.userName.toLowerCase().includes(searchQuery));
+  const filtered = allConversations.filter(c => c.latestSenderName.toLowerCase().includes(searchQuery) || c.chatRoomId.toLowerCase().includes(searchQuery));
 
   if (filtered.length === 0) {
     container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Không tìm thấy cuộc trò chuyện nào</div>';
@@ -575,13 +575,13 @@ function renderConversationsList() {
   container.innerHTML = '';
   filtered.forEach(c => {
     const div = document.createElement('div');
-    div.className = `conversation-item ${activeChatUserId === c.userId ? 'active' : ''}`;
-    div.onclick = () => selectConversation(c.userId, c.userName);
+    div.className = `conversation-item ${activeChatUserId === c.chatRoomId ? 'active' : ''}`;
+    div.onclick = () => selectConversation(c.chatRoomId, c.latestSenderName);
 
     div.innerHTML = `
       <div class="conversation-info">
-        <span class="conversation-name">${c.userName}</span>
-        <span class="conversation-last-msg">${c.lastMessage}</span>
+        <span class="conversation-name">${c.latestSenderName} <small style="opacity:0.5; font-size:0.75rem;">(Room: ${c.chatRoomId.substring(0,6)}...)</small></span>
+        <span class="conversation-last-msg">${c.latestMessage}</span>
       </div>
       ${c.unreadCount > 0 ? `<span class="conversation-badge">${c.unreadCount}</span>` : ''}
     `;
@@ -593,39 +593,32 @@ function filterConversations() {
   renderConversationsList();
 }
 
-async function selectConversation(userId, userName) {
-  activeChatUserId = userId;
+async function selectConversation(chatRoomId, userName) {
+  activeChatUserId = chatRoomId;
   
-  // Highlight active conversation
   const items = document.querySelectorAll('.conversation-item');
   items.forEach(item => item.classList.remove('active'));
   
-  // Update header and input state
   document.getElementById('chat-messages-header').innerHTML = `
     <h4>Đang chat với: <span class="glow-text-cyan">${userName}</span></h4>
   `;
   document.getElementById('chat-messages-footer').style.display = 'flex';
   
-  // Mark messages as read
   try {
-    await fetch('/api/chat/read', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ senderId: userId })
+    await fetch(`/api/chat/room/${chatRoomId}/read`, {
+      method: 'POST'
     });
-    // Silent reload conversations to clear badge count
     loadConversations(true);
   } catch (err) {
     console.error(err);
   }
-
-  // Load message bubbles
-  loadMessages(userId);
+ 
+  loadMessages(chatRoomId);
 }
 
-async function loadMessages(userId, silent = false) {
+async function loadMessages(chatRoomId, silent = false) {
   try {
-    const res = await fetch(`/api/chat/messages?with=${userId}`);
+    const res = await fetch(`/api/chat/room/${chatRoomId}`);
     const data = await res.json();
     if (data.success) {
       const messagesBody = document.getElementById('chat-messages-body');
@@ -635,11 +628,12 @@ async function loadMessages(userId, silent = false) {
         html = '<div class="chat-messages-placeholder">Chưa có tin nhắn nào. Gửi lời chào để bắt đầu!</div>';
       } else {
         data.messages.forEach(msg => {
-          const isSentByMe = msg.senderId._id.toString() !== userId.toString();
+          const isSentByMe = msg.senderRole === 'staff' || msg.senderRole === 'admin';
           const time = new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
           html += `
             <div class="chat-bubble ${isSentByMe ? 'sent' : 'received'}">
-              <div>${msg.content}</div>
+              <div style="font-size:0.75rem; opacity:0.7; margin-bottom:2px; font-weight:bold;">${msg.senderName}</div>
+              <div>${msg.message}</div>
               <div class="chat-time">${time}</div>
             </div>
           `;
@@ -647,7 +641,6 @@ async function loadMessages(userId, silent = false) {
       }
       messagesBody.innerHTML = html;
       
-      // Scroll to bottom on new messages
       if (!silent) {
         messagesBody.scrollTop = messagesBody.scrollHeight;
       }
@@ -666,6 +659,18 @@ async function sendChatMessage() {
     const res = await fetch('/api/chat/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatRoomId: activeChatUserId, message: content })
+    });
+    const data = await res.json();
+    if (data.success) {
+      input.value = '';
+      await loadMessages(activeChatUserId);
+      loadConversations(true);
+    }
+  } catch (err) {
+    console.error('Lỗi gửi tin nhắn:', err);
+  }
+}eaders: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ receiverId: activeChatUserId, content })
     });
     const data = await res.json();

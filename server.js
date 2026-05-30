@@ -3,12 +3,43 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const authMiddleware = require('./middleware/authMiddleware');
 const { requireAuth, requireStaff, requireAdmin } = require('./middleware/roleMiddleware');
 const errorMiddleware = require('./middleware/errorMiddleware');
 
 const app = express();
+
+// Security Middlewares
+app.use(helmet({
+  contentSecurityPolicy: false, // Turn off CSP for easy static file resource loading
+  crossOriginEmbedderPolicy: false
+}));
+app.use(mongoSanitize());
+
+// Rate Limiters
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Yêu cầu quá giới hạn. Vui lòng thử lại sau 15 phút.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30, // Limit login/register attempts
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 15 phút.' }
+});
+
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
+
 
 // Connect to Database
 connectDB();

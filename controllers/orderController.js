@@ -6,6 +6,7 @@ const generateOrderCode = require('../utils/generateOrderCode');
 const calculateDiscount = require('../utils/calculateDiscount');
 const createAuditLog = require('../utils/createAuditLog');
 const deleteFile = require('../utils/deleteFile');
+const { decrypt } = require('../utils/cryptoHelper');
 
 const createOrder = async (req, res, next) => {
   const reservedAccountIds = [];
@@ -62,7 +63,14 @@ const createOrder = async (req, res, next) => {
         gameType: updatedAccount.gameType,
         image: updatedAccount.images[0] || '',
         price: updatedAccount.price,
-        subtotal: updatedAccount.price
+        subtotal: updatedAccount.price,
+        deliveredCredentials: {
+          username: updatedAccount.loginInfo.username,
+          password: updatedAccount.loginInfo.password,
+          loginMethod: updatedAccount.loginInfo.loginMethod,
+          linkedEmail: updatedAccount.loginInfo.linkedEmail,
+          securityNote: updatedAccount.loginInfo.securityNote
+        }
       });
 
       subtotal += updatedAccount.price;
@@ -252,14 +260,29 @@ const getOrderById = async (req, res, next) => {
     // Attach account login credentials ONLY if order is completed OR viewer is staff/admin
     const showCredentials = order.orderStatus === 'completed' || isStaffOrAdminUser;
 
+    if (showCredentials && isStaffOrAdminUser) {
+      await createAuditLog(
+        req.user._id,
+        'VIEW_ORDER_CREDENTIALS',
+        `Nhân viên/Admin xem thông tin đăng nhập từ đơn hàng: ${order.orderCode}`,
+        req.ip,
+        'Order',
+        order._id
+      );
+    }
+
     for (let i = 0; i < orderObj.items.length; i++) {
       const item = orderObj.items[i];
-      if (showCredentials) {
-        const fullAccount = await GameAccount.findById(item.accountId);
-        if (fullAccount) {
-          item.loginInfo = fullAccount.loginInfo;
-        }
+      if (showCredentials && item.deliveredCredentials) {
+        item.loginInfo = {
+          username: item.deliveredCredentials.username,
+          password: decrypt(item.deliveredCredentials.password),
+          loginMethod: item.deliveredCredentials.loginMethod,
+          linkedEmail: item.deliveredCredentials.linkedEmail,
+          securityNote: item.deliveredCredentials.securityNote
+        };
       }
+      delete item.deliveredCredentials;
     }
 
     res.status(200).json({
@@ -416,14 +439,16 @@ const trackOrder = async (req, res, next) => {
 
     for (let i = 0; i < orderObj.items.length; i++) {
       const item = orderObj.items[i];
-      if (showCredentials) {
-        const fullAccount = await GameAccount.findById(item.accountId);
-        if (fullAccount) {
-          item.loginInfo = fullAccount.loginInfo;
-        }
-      } else {
-        delete item.loginInfo;
+      if (showCredentials && item.deliveredCredentials) {
+        item.loginInfo = {
+          username: item.deliveredCredentials.username,
+          password: decrypt(item.deliveredCredentials.password),
+          loginMethod: item.deliveredCredentials.loginMethod,
+          linkedEmail: item.deliveredCredentials.linkedEmail,
+          securityNote: item.deliveredCredentials.securityNote
+        };
       }
+      delete item.deliveredCredentials;
     }
 
     res.status(200).json({
@@ -586,7 +611,14 @@ const createManualOrder = async (req, res, next) => {
         gameType: updatedAccount.gameType,
         image: updatedAccount.images[0] || '',
         price: updatedAccount.price,
-        subtotal: updatedAccount.price
+        subtotal: updatedAccount.price,
+        deliveredCredentials: {
+          username: updatedAccount.loginInfo.username,
+          password: updatedAccount.loginInfo.password,
+          loginMethod: updatedAccount.loginInfo.loginMethod,
+          linkedEmail: updatedAccount.loginInfo.linkedEmail,
+          securityNote: updatedAccount.loginInfo.securityNote
+        }
       });
 
       subtotal += updatedAccount.price;
@@ -687,7 +719,14 @@ const directHandover = async (req, res, next) => {
         gameType: updatedAccount.gameType,
         image: updatedAccount.images[0] || '',
         price: price,
-        subtotal: price
+        subtotal: price,
+        deliveredCredentials: {
+          username: updatedAccount.loginInfo.username,
+          password: updatedAccount.loginInfo.password,
+          loginMethod: updatedAccount.loginInfo.loginMethod,
+          linkedEmail: updatedAccount.loginInfo.linkedEmail,
+          securityNote: updatedAccount.loginInfo.securityNote
+        }
       }],
       subtotal: price,
       discountAmount: 0,
