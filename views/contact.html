@@ -6,14 +6,317 @@
   <title>Liên hệ hỗ trợ - GameNick Store</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/responsive.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .contact-layout {
-      max-width: 1000px;
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .contact-wrapper {
+      max-width: 1100px;
       margin: 40px auto;
       padding: 0 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
+    }
+    .messenger-container {
+      display: flex;
+      height: 620px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: rgba(18, 18, 24, 0.75);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Sidebar */
+    .messenger-sidebar {
+      width: 320px;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-header h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+    .channels-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .channel-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .channel-item.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(6, 182, 212, 0.15));
+      border-left: 3px solid #06b6d4;
+    }
+    .channel-item.info-only {
+      cursor: default;
+    }
+    .channel-item.info-only:hover {
+      background: transparent;
+    }
+    .channel-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+    .channel-item.active .channel-avatar {
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      color: white;
+    }
+    .channel-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .channel-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .channel-preview {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Chat Area */
+    .messenger-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .chat-header {
+      padding: 15px 25px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .chat-header h4 {
+      margin: 0;
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    
+    .chat-body {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: rgba(0,0,0,0.1);
+    }
+    .chat-bubble-c {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      word-break: break-word;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .chat-bubble-c.received {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+      border-bottom-left-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .chat-bubble-c.sent {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-bubble-c .sender {
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #818cf8;
+    }
+    .chat-bubble-c.sent .sender {
+      color: #a5f3fc;
+    }
+    .chat-bubble-c .time {
+      font-size: 0.65rem;
+      opacity: 0.5;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* Suggestion Options Layout */
+    .suggestions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 5px;
+      align-self: flex-start;
+      width: 100%;
+      max-width: 450px;
+    }
+    .suggestion-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: white;
+      text-align: left;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .suggestion-btn:hover {
+      background: rgba(6, 182, 212, 0.1);
+      border-color: #06b6d4;
+      transform: translateX(4px);
+    }
+
+    /* Embedded Form Bubble */
+    .chat-form-bubble {
+      background: rgba(18, 18, 24, 0.95);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .chat-form-bubble h4 {
+      margin: 0 0 5px 0;
+      color: #06b6d4;
+      font-size: 0.95rem;
+    }
+    .chat-form-bubble .form-group {
+      margin: 0;
+    }
+    .chat-form-bubble label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .chat-form-bubble input, .chat-form-bubble textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      color: white;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .chat-form-bubble input:focus, .chat-form-bubble textarea:focus {
+      border-color: #06b6d4;
+    }
+    .chat-form-bubble button {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 15px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+    .chat-form-bubble button:hover {
+      opacity: 0.9;
+    }
+
+    .chat-footer {
+      padding: 15px 25px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .chat-footer input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: white;
+      outline: none;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .chat-footer input:focus {
+      border-color: #06b6d4;
+    }
+    .chat-footer button {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .chat-footer button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .messenger-sidebar {
+        display: none;
+      }
+      .messenger-container {
+        height: 520px;
+      }
     }
   </style>
 </head>
@@ -43,52 +346,72 @@
     </div>
   </header>
 
-  <!-- Contact Body -->
-  <div class="contact-layout">
-    
-    <!-- Info Column -->
-    <div class="glass" style="padding: 40px;">
-      <h2 class="glow-text-cyan" style="font-weight: 700; margin-bottom: 20px;">Liên Hệ Hỗ Trợ</h2>
-      <p style="color: var(--text-muted); margin-bottom: 30px;">Hệ thống chăm sóc khách hàng hoạt động 24/7. Mọi thắc mắc của quý khách về việc mua bán nick game và bảo hành vui lòng gửi liên hệ hoặc liên hệ trực tiếp qua hotline.</p>
+  <!-- Main Container -->
+  <div class="contact-wrapper">
+    <div class="messenger-container">
       
-      <div style="display: flex; flex-direction: column; gap: 15px;">
-        <p>📞 Hotline: <strong class="site-phone"></strong></p>
-        <p>📧 Email hỗ trợ: <strong class="site-email"></strong></p>
-        <p>📍 Văn phòng: <strong class="site-address"></strong></p>
+      <!-- Left Sidebar: Support Info Channels -->
+      <div class="messenger-sidebar">
+        <div class="sidebar-header">
+          <h3>Kênh Hỗ Trợ</h3>
+        </div>
+        <div class="channels-list">
+          <div class="channel-item active">
+            <div class="channel-avatar">💬</div>
+            <div class="channel-details">
+              <span class="channel-name">Trợ lý Hỏi Đáp (Q&A)</span>
+              <span class="channel-preview">Giải đáp tự động & Gửi yêu cầu</span>
+            </div>
+          </div>
+          <div class="channel-item info-only">
+            <div class="channel-avatar">📞</div>
+            <div class="channel-details">
+              <span class="channel-name">Hotline CSKH</span>
+              <span class="channel-preview site-phone">Đang tải...</span>
+            </div>
+          </div>
+          <div class="channel-item info-only">
+            <div class="channel-avatar">📧</div>
+            <div class="channel-details">
+              <span class="channel-name">Email Hỗ Trợ</span>
+              <span class="channel-preview site-email">Đang tải...</span>
+            </div>
+          </div>
+          <div class="channel-item info-only">
+            <div class="channel-avatar">📍</div>
+            <div class="channel-details">
+              <span class="channel-name">Văn Phòng Trụ Sở</span>
+              <span class="channel-preview site-address">Đang tải...</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Form Column -->
-    <div class="glass" style="padding: 40px;">
-      <h3 style="font-weight: 600; margin-bottom: 20px; color: var(--accent-cyan);">Gửi Lời Nhắn Hỗ Trợ</h3>
-      
-      <form id="contactForm">
-        <div class="form-group">
-          <label for="fullName">Họ và tên của bạn</label>
-          <input type="text" id="fullName" class="form-control" required placeholder="Họ tên của bạn">
+      <!-- Right Chat Window -->
+      <div class="messenger-chat">
+        <div class="chat-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="status-dot"></div>
+            <div>
+              <h4 id="chat-title">Trợ lý hỗ trợ GameNick Store</h4>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;">Nhấp vào câu hỏi gợi ý hoặc gửi ticket liên hệ</span>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="email">Địa chỉ Email</label>
-          <input type="email" id="email" class="form-control" required placeholder="email@gamenick.com">
-        </div>
-        <div class="form-group">
-          <label for="phone">Số điện thoại</label>
-          <input type="tel" id="phone" class="form-control" placeholder="Số điện thoại liên lạc">
-        </div>
-        <div class="form-group">
-          <label for="subject">Chủ đề liên hệ</label>
-          <input type="text" id="subject" class="form-control" placeholder="Ví dụ: Vấn đề nạp tiền, Hỗ trợ mua acc...">
-        </div>
-        <div class="form-group">
-          <label for="message">Nội dung chi tiết</label>
-          <textarea id="message" class="form-control" rows="4" required placeholder="Nhập nội dung cần hỗ trợ..."></textarea>
-        </div>
-        <button type="submit" id="submit-message-btn" class="btn btn-cyan" style="width: 100%;">
-          Gửi Liên Hệ Hỗ Trợ ✉️
-        </button>
-      </form>
-    </div>
 
+        <!-- Chat Body -->
+        <div class="chat-body" id="contact-chat-messages">
+          <!-- Initial bot greeting injected via JS -->
+        </div>
+
+        <!-- Chat Footer -->
+        <div class="chat-footer">
+          <input type="text" id="contact-chat-input" placeholder="Nhập câu hỏi của bạn..." autocomplete="off">
+          <button id="contact-chat-send">Gửi ✈️</button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <footer>
@@ -100,36 +423,210 @@
   <script src="/js/toast.js"></script>
   <script src="/js/main.js"></script>
   <script>
-    document.getElementById('contactForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fullName = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const subject = document.getElementById('subject').value.trim();
-      const message = document.getElementById('message').value.trim();
-
+    document.addEventListener('DOMContentLoaded', async () => {
+      const chatBody = document.getElementById('contact-chat-messages');
+      const sendBtn = document.getElementById('contact-chat-send');
+      const chatInput = document.getElementById('contact-chat-input');
+      
+      let currentUser = null;
+      
+      // Fetch user session to pre-fill the form
       try {
-        document.getElementById('submit-message-btn').disabled = true;
-        
-        const res = await fetch('/api/contacts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName, email, phone, subject, message })
-        });
+        const res = await fetch('/api/auth/me');
         const data = await res.json();
-
-        if (data.success) {
-          window.showToast(data.message, 'success');
-          document.getElementById('contactForm').reset();
-        } else {
-          window.showToast(data.message, 'error');
+        if (data.success && data.user) {
+          currentUser = data.user;
         }
-        document.getElementById('submit-message-btn').disabled = false;
       } catch (err) {
         console.error(err);
-        window.showToast('Không thể gửi tin nhắn liên hệ.', 'error');
-        document.getElementById('submit-message-btn').disabled = false;
       }
+
+      // Presets
+      const SUGGESTIONS = [
+        { id: 'nap_tien', text: '💸 Làm thế nào để nạp tiền vào tài khoản?' },
+        { id: 'bao_hanh', text: '🛡️ Chính sách bảo hành tài khoản ra sao?' },
+        { id: 'nhan_nick', text: '🔑 Sau khi thanh toán làm sao nhận được nick?' },
+        { id: 'sai_pass', text: '🚨 Nick bị sai mật khẩu hoặc lỗi đăng nhập?' },
+        { id: 'gui_ticket', text: '📞 Gửi yêu cầu hỗ trợ cho kỹ thuật viên' }
+      ];
+
+      const ANSWERS = {
+        nap_tien: "Để nạp tiền vào ví tài khoản, bạn vui lòng đăng nhập, truy cập mục **Nạp tiền** ở thanh menu của Dashboard thành viên. Thực hiện chuyển khoản theo thông tin ngân hàng hiển thị với nội dung chuyển khoản chính xác là: `NAP [Tên tài khoản]`.",
+        bao_hanh: "GameNick Store cam kết bảo hành lỗi 1 đổi 1 hoặc hoàn tiền trong vòng số ngày bảo hành hiển thị trên nick game (từ 1 đến 7 ngày) nếu tài khoản gặp sự cố lỗi đăng nhập, sai thông tin hoặc bị thu hồi không do lỗi của bạn.",
+        nhan_nick: "Hệ thống bàn giao tài khoản tự động lập tức! Sau khi mua thành công, bạn hãy truy cập mục **Đơn hàng của tôi** trong Dashboard thành viên, bấm vào 'Xem chi tiết' để nhận ngay Tên đăng nhập và Mật khẩu nick game.",
+        sai_pass: "Nếu nick game bị sai mật khẩu hoặc không thể đăng nhập, bạn vui lòng vào mục **Đơn hàng**, chọn **Khiếu nại** để gửi yêu cầu hỗ trợ kèm ảnh chụp lỗi. Kỹ thuật viên sẽ xử lý và đổi nick/hoàn tiền cho bạn trong vòng 15-30 phút."
+      };
+
+      // Add a message bubble
+      function appendBubble(sender, role, text, isMe = false) {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble-c ${isMe ? 'sent' : 'received'}`;
+        
+        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        
+        bubble.innerHTML = `
+          <div class="sender" style="color: ${isMe ? '#a5f3fc' : '#818cf8'}">${sender}</div>
+          <div>${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+          <div class="time">${timeStr}</div>
+        `;
+        
+        chatBody.appendChild(bubble);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+
+      // Add clickable suggested questions list
+      function appendSuggestions() {
+        const container = document.createElement('div');
+        container.className = 'suggestions-container';
+        
+        SUGGESTIONS.forEach(s => {
+          const btn = document.createElement('button');
+          btn.className = 'suggestion-btn';
+          btn.textContent = s.text;
+          btn.onclick = () => handleSuggestionClick(s.id, s.text);
+          container.appendChild(btn);
+        });
+        
+        chatBody.appendChild(container);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+
+      // Render the ticket form inside chat body
+      function appendTicketForm(prefilledMsg = '') {
+        const formBubble = document.createElement('div');
+        formBubble.className = 'chat-form-bubble';
+        
+        const defaultName = currentUser ? currentUser.fullName : '';
+        const defaultEmail = currentUser ? currentUser.email : '';
+        const defaultPhone = currentUser ? currentUser.phone : '';
+
+        formBubble.innerHTML = `
+          <h4>✉️ Gửi Yêu Cầu Hỗ Trợ (Ticket)</h4>
+          <form id="embeddedContactForm">
+            <div class="form-group" style="margin-bottom: 8px;">
+              <label>Họ và tên *</label>
+              <input type="text" id="form-name" required value="${defaultName}" placeholder="Nhập họ tên...">
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+              <label>Email liên hệ *</label>
+              <input type="email" id="form-email" required value="${defaultEmail}" placeholder="Nhập email...">
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+              <label>Số điện thoại</label>
+              <input type="tel" id="form-phone" value="${defaultPhone}" placeholder="Nhập số điện thoại...">
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+              <label>Chủ đề</label>
+              <input type="text" id="form-subject" value="Hỗ trợ kỹ thuật" placeholder="Nhập chủ đề hỗ trợ...">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label>Nội dung chi tiết *</label>
+              <textarea id="form-message" rows="3" required placeholder="Nhập nội dung cần hỗ trợ...">${prefilledMsg}</textarea>
+            </div>
+            <button type="submit" id="form-submit-btn" style="width: 100%;">Gửi Yêu Cầu</button>
+          </form>
+        `;
+
+        chatBody.appendChild(formBubble);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        const form = formBubble.querySelector('#embeddedContactForm');
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const fullName = form.querySelector('#form-name').value.trim();
+          const email = form.querySelector('#form-email').value.trim();
+          const phone = form.querySelector('#form-phone').value.trim();
+          const subject = form.querySelector('#form-subject').value.trim();
+          const message = form.querySelector('#form-message').value.trim();
+
+          try {
+            form.querySelector('#form-submit-btn').disabled = true;
+            form.querySelector('#form-submit-btn').textContent = 'Đang gửi...';
+
+            const res = await fetch('/api/contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fullName, email, phone, subject, message })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              window.showToast(data.message, 'success');
+              
+              // Remove the form bubble and print success response
+              formBubble.remove();
+              appendBubble('Trợ lý', 'bot', `Cảm ơn **${fullName}**. Lời nhắn hỗ trợ với chủ đề "**${subject}**" của bạn đã được gửi thành công đến bộ phận kỹ thuật. Chúng tôi sẽ phản hồi lại cho bạn sớm nhất qua email **${email}**.`);
+            } else {
+              window.showToast(data.message, 'error');
+              form.querySelector('#form-submit-btn').disabled = false;
+              form.querySelector('#form-submit-btn').textContent = 'Gửi Yêu Cầu';
+            }
+          } catch (err) {
+            console.error(err);
+            window.showToast('Không thể gửi yêu cầu hỗ trợ.', 'error');
+            form.querySelector('#form-submit-btn').disabled = false;
+            form.querySelector('#form-submit-btn').textContent = 'Gửi Yêu Cầu';
+          }
+        };
+      }
+
+      // Handle preset clicks
+      function handleSuggestionClick(id, text) {
+        // Remove suggestions from view
+        const currentSuggestions = chatBody.querySelector('.suggestions-container');
+        if (currentSuggestions) currentSuggestions.remove();
+
+        // 1. Append user's question bubble
+        appendBubble(currentUser ? currentUser.fullName : 'Bạn', 'user', text, true);
+
+        // 2. Append bot's reply bubble after short delay
+        setTimeout(() => {
+          if (id === 'gui_ticket') {
+            appendBubble('Trợ lý', 'bot', "Để gửi yêu cầu liên hệ trực tiếp cho bộ phận kỹ thuật viên, bạn vui lòng điền thông tin chi tiết vào form bên dưới:");
+            appendTicketForm();
+          } else {
+            const answer = ANSWERS[id] || "Xin lỗi, tôi không tìm thấy thông tin cho câu hỏi này.";
+            appendBubble('Trợ lý', 'bot', answer);
+            
+            // Suggest what's next
+            setTimeout(() => {
+              appendBubble('Trợ lý', 'bot', "Bạn có cần hỏi thêm vấn đề nào khác không? Nhấp chọn chủ đề bên dưới hoặc nhập nội dung tùy ý:");
+              appendSuggestions();
+            }, 800);
+          }
+        }, 500);
+      }
+
+      // Handle user typing custom message
+      function handleCustomSend() {
+        const content = chatInput.value.trim();
+        if (!content) return;
+
+        chatInput.value = '';
+
+        // Remove old suggestions
+        const currentSuggestions = chatBody.querySelector('.suggestions-container');
+        if (currentSuggestions) currentSuggestions.remove();
+
+        // 1. User message bubble
+        appendBubble(currentUser ? currentUser.fullName : 'Bạn', 'user', content, true);
+
+        // 2. Bot reply after short delay
+        setTimeout(() => {
+          appendBubble('Trợ lý', 'bot', "Để nhân viên kỹ thuật có thể giải đáp chính xác và liên hệ hỗ trợ riêng cho bạn, vui lòng hoàn tất phiếu thông tin hỗ trợ dưới đây (nội dung câu hỏi của bạn đã được điền sẵn):");
+          appendTicketForm(content);
+        }, 500);
+      }
+
+      sendBtn.onclick = handleCustomSend;
+      chatInput.onkeypress = (e) => {
+        if (e.key === 'Enter') handleCustomSend();
+      };
+
+      // Initial Greeting
+      appendBubble('Trợ lý', 'bot', "Xin chào! Cảm ơn bạn đã liên hệ với bộ phận CSKH của **GameNick Store**. \n\nDưới đây là các chủ đề thường gặp mà tôi có thể giải đáp nhanh cho bạn:");
+      appendSuggestions();
+
     });
   </script>
 </body>
