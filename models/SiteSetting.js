@@ -20,7 +20,10 @@ const siteSettingSchema = new mongoose.Schema({
     ownerName: { type: String, default: '' },
     phoneNumber: { type: String, default: '' },
     qrTemplate: { type: String, default: '' }
-  }
+  },
+  zaloLink: { type: String, default: '' },
+  facebookLink: { type: String, default: '' },
+  tiktokLink: { type: String, default: '' }
 }, {
   timestamps: true
 });

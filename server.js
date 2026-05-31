@@ -23,7 +23,7 @@ app.use(mongoSanitize());
 // Rate Limiters
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per 15 minutes
+  max: 3000, // Increased to 3000 to accommodate frequent chat polling and prevent accidental blockages
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Yêu cầu quá giới hạn. Vui lòng thử lại sau 15 phút.' }
@@ -31,14 +31,17 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30, // Limit login/register attempts
+  max: 30, // Strict limit for auth attempts
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 15 phút.' }
 });
 
 app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter);
+// Apply strict auth limiter ONLY to login, register, and forgot password to prevent locking session checks (/me)
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 
 // Connect to Database
@@ -106,6 +109,7 @@ app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
+app.use('/api/wallet', require('./routes/walletRoutes'));
 
 // 404 Route handler for unknown APIs
 app.use('/api/*', (req, res) => {
@@ -125,6 +129,20 @@ app.listen(PORT, () => {
   const url = `http://localhost:${PORT}`;
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   console.log(`Local URL: ${url}`);
+
+  console.log('\n======================================================');
+  console.log('🔑 TÀI KHOẢN MẪU ĐỂ ĐĂNG NHẬP / MOCK ACCOUNTS:');
+  console.log('------------------------------------------------------');
+  console.log('1. Admin:');
+  console.log('   - Username: admin');
+  console.log('   - Password: Admin@123');
+  console.log('2. Staff:');
+  console.log('   - Username: staff');
+  console.log('   - Password: Staff@123');
+  console.log('3. Member / Khách hàng:');
+  console.log('   - Username: namkhank (hoặc ductran, thaopham)');
+  console.log('   - Password: User@123');
+  console.log('======================================================\n');
 
   // Tự động mở trình duyệt khi server khởi động xong
   try {

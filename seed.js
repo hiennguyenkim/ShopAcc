@@ -585,7 +585,14 @@ const seedData = async () => {
         gameType: accLQ_Sold.gameType,
         image: '',
         price: accLQ_Sold.price,
-        subtotal: accLQ_Sold.price
+        subtotal: accLQ_Sold.price,
+        deliveredCredentials: {
+          username: accLQ_Sold.loginInfo.username,
+          password: accLQ_Sold.loginInfo.password,
+          loginMethod: accLQ_Sold.loginInfo.loginMethod || 'Garena',
+          linkedEmail: accLQ_Sold.loginInfo.linkedEmail || '',
+          securityNote: accLQ_Sold.loginInfo.securityNote || ''
+        }
       }],
       subtotal: 150000,
       discountAmount: 0,
@@ -635,7 +642,14 @@ const seedData = async () => {
         gameType: accLQ_Reserved.gameType,
         image: '',
         price: accLQ_Reserved.price,
-        subtotal: accLQ_Reserved.price
+        subtotal: accLQ_Reserved.price,
+        deliveredCredentials: {
+          username: accLQ_Reserved.loginInfo.username,
+          password: accLQ_Reserved.loginInfo.password,
+          loginMethod: accLQ_Reserved.loginInfo.loginMethod || 'Garena',
+          linkedEmail: accLQ_Reserved.loginInfo.linkedEmail || '',
+          securityNote: accLQ_Reserved.loginInfo.securityNote || ''
+        }
       }],
       subtotal: 300000,
       discountAmount: 0,

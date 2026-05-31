@@ -7,7 +7,13 @@ const storage = multer.diskStorage({
     let folder = 'others';
 
     // Identify folder name based on URL path or custom query parameter
-    if (req.baseUrl.includes('game-accounts') || req.originalUrl.includes('game-accounts')) {
+    if (req.originalUrl.includes('upload-logo')) {
+      folder = 'logos';
+    } else if (req.originalUrl.includes('upload-avatar')) {
+      folder = 'avatars';
+    } else if (req.originalUrl.includes('recharge-bank')) {
+      folder = 'recharges';
+    } else if (req.baseUrl.includes('game-accounts') || req.originalUrl.includes('game-accounts')) {
       folder = 'game-accounts';
     } else if (req.baseUrl.includes('categories') || req.originalUrl.includes('categories')) {
       folder = 'categories';
@@ -18,7 +24,7 @@ const storage = multer.diskStorage({
     } else if (req.baseUrl.includes('complaints') || req.originalUrl.includes('complaints')) {
       folder = 'complaints';
     } else if (req.baseUrl.includes('orders') || req.originalUrl.includes('orders')) {
-      folder = 'payment-proofs'; // custom folder for payment proofs
+      folder = 'payment-proofs';
     } else if (req.query.folder) {
       folder = req.query.folder;
     }

@@ -465,7 +465,9 @@
 }
 
 /* Dropdown color fix for dark mode */
-select, select option, .form-control select, .form-control option, select.form-control, select.form-control option {
+select { color: #1a1a1a !important; background-color: #ffffff !important; }
+select option { color: #1a1a1a !important; background-color: #ffffff !important; }
+.form-control select, select.form-control, select.form-control option {
   color: #ffffff !important;
   background-color: #191c25 !important;
 }

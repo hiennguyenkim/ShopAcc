@@ -34,7 +34,10 @@ const updateSettings = async (req, res, next) => {
       facebookUrl,
       youtubeUrl,
       bankInfo,
-      momoInfo
+      momoInfo,
+      zaloLink,
+      facebookLink,
+      tiktokLink
     } = req.body;
 
     if (bannerTitle !== undefined) settings.bannerTitle = bannerTitle;
@@ -44,6 +47,9 @@ const updateSettings = async (req, res, next) => {
     if (address !== undefined) settings.address = address;
     if (facebookUrl !== undefined) settings.facebookUrl = facebookUrl;
     if (youtubeUrl !== undefined) settings.youtubeUrl = youtubeUrl;
+    if (zaloLink !== undefined) settings.zaloLink = zaloLink;
+    if (facebookLink !== undefined) settings.facebookLink = facebookLink;
+    if (tiktokLink !== undefined) settings.tiktokLink = tiktokLink;
 
     if (bankInfo) {
       const parsedBank = typeof bankInfo === 'string' ? JSON.parse(bankInfo) : bankInfo;
@@ -86,7 +92,24 @@ const updateSettings = async (req, res, next) => {
   }
 };
 
+const uploadLogo = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn file logo.' });
+    }
+    const url = `/uploads/logos/${req.file.filename}`;
+    res.status(200).json({
+      success: true,
+      message: 'Tải logo lên thành công.',
+      url
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getSettings,
-  updateSettings
+  updateSettings,
+  uploadLogo
 };

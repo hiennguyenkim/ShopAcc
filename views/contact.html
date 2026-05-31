@@ -428,17 +428,19 @@
       const sendBtn = document.getElementById('contact-chat-send');
       const chatInput = document.getElementById('contact-chat-input');
       
-      let currentUser = null;
+      let user = window.currentUser;
       
-      // Fetch user session to pre-fill the form
-      try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (data.success && data.user) {
-          currentUser = data.user;
+      // Fetch user session to pre-fill the form if not already loaded by main.js
+      if (!user) {
+        try {
+          const res = await fetch('/api/auth/me');
+          const data = await res.json();
+          if (data.success && data.user) {
+            user = data.user;
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
       }
 
       // Presets
@@ -496,9 +498,9 @@
         const formBubble = document.createElement('div');
         formBubble.className = 'chat-form-bubble';
         
-        const defaultName = currentUser ? currentUser.fullName : '';
-        const defaultEmail = currentUser ? currentUser.email : '';
-        const defaultPhone = currentUser ? currentUser.phone : '';
+        const defaultName = user ? user.fullName : '';
+        const defaultEmail = user ? user.email : '';
+        const defaultPhone = user ? user.phone : '';
 
         formBubble.innerHTML = `
           <h4>✉️ Gửi Yêu Cầu Hỗ Trợ (Ticket)</h4>
@@ -577,7 +579,7 @@
         if (currentSuggestions) currentSuggestions.remove();
 
         // 1. Append user's question bubble
-        appendBubble(currentUser ? currentUser.fullName : 'Bạn', 'user', text, true);
+        appendBubble(user ? user.fullName : 'Bạn', 'user', text, true);
 
         // 2. Append bot's reply bubble after short delay
         setTimeout(() => {
@@ -609,7 +611,7 @@
         if (currentSuggestions) currentSuggestions.remove();
 
         // 1. User message bubble
-        appendBubble(currentUser ? currentUser.fullName : 'Bạn', 'user', content, true);
+        appendBubble(user ? user.fullName : 'Bạn', 'user', content, true);
 
         // 2. Bot reply after short delay
         setTimeout(() => {

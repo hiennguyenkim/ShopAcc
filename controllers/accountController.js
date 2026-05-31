@@ -136,6 +136,8 @@ const adjustBalance = async (req, res, next) => {
     const oldBalance = account.balance;
     if (action === 'deposit') {
       account.balance += Number(amount);
+      account.totalDeposited = (account.totalDeposited || 0) + Number(amount);
+      account.lastDepositAt = new Date();
     } else if (action === 'withdraw') {
       if (account.balance < amount) {
         return res.status(400).json({ success: false, message: 'Số dư tài khoản không đủ để trừ.' });

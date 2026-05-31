@@ -1,4 +1,4 @@
-let currentUser = null;
+// currentUser is already declared in main.js
 let chatIntervalId = null;
 let activeReceiverId = null;
 
@@ -9,9 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMyComplaints();
   loadDepositSettings();
 
+  document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
+  document.getElementById('avatarUpload').addEventListener('change', handleAvatarUpload);
   document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
   document.getElementById('reviewForm').addEventListener('submit', handleReviewSubmit);
   document.getElementById('complaintForm').addEventListener('submit', handleComplaintSubmit);
+
+  setupWalletRechargeUI();
+  activateTabFromUrl();
 });
 
 // Sidebar navigation tab toggler
@@ -48,6 +53,8 @@ function setupTabs() {
   });
 }
 
+let bankInfo = null;
+
 // Load account statistics
 async function loadUserProfile() {
   try {
@@ -56,9 +63,45 @@ async function loadUserProfile() {
     if (data.success && data.user) {
       currentUser = data.user;
       document.getElementById('sidebar-name').textContent = currentUser.fullName;
-      document.getElementById('sidebar-avatar').textContent = currentUser.fullName[0].toUpperCase();
+      
+      const sidebarAvatar = document.getElementById('sidebar-avatar');
+      if (currentUser.avatar) {
+        sidebarAvatar.innerHTML = `<img src="${currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        sidebarAvatar.textContent = currentUser.fullName[0].toUpperCase();
+      }
+      
       document.getElementById('sidebar-balance').textContent = `${currentUser.balance.toLocaleString('vi-VN')}đ`;
-      document.getElementById('deposit-memo').textContent = `NAP ${currentUser.username.toUpperCase()}`;
+      
+      // Update deposit info
+      updateDepositMemoAndQR();
+
+      // Populate profile form inputs
+      const profileNameInput = document.getElementById('profile-name');
+      if (profileNameInput) profileNameInput.value = currentUser.fullName || '';
+      const profilePhoneInput = document.getElementById('profile-phone');
+      if (profilePhoneInput) profilePhoneInput.value = currentUser.phone || '';
+      const profileEmailInput = document.getElementById('profile-email');
+      if (profileEmailInput) profileEmailInput.value = currentUser.email || '';
+      const profileAddressInput = document.getElementById('profile-address');
+      if (profileAddressInput) profileAddressInput.value = currentUser.address || '';
+
+      // Avatar preview in profile
+      const preview = document.getElementById('profile-avatar-preview');
+      const letter = document.getElementById('profile-avatar-letter');
+      if (currentUser.avatar) {
+        if (preview) {
+          preview.src = currentUser.avatar;
+          preview.style.display = 'block';
+        }
+        if (letter) letter.style.display = 'none';
+      } else {
+        if (preview) preview.style.display = 'none';
+        if (letter) {
+          letter.style.display = 'block';
+          letter.textContent = currentUser.fullName[0].toUpperCase();
+        }
+      }
     }
   } catch (err) {
     console.error(err);
@@ -71,13 +114,45 @@ async function loadDepositSettings() {
     const res = await fetch('/api/site-settings');
     const data = await res.json();
     if (data.success && data.settings) {
-      const bank = data.settings.bankInfo;
-      document.getElementById('deposit-bank-name').textContent = bank.bankName || 'N/A';
-      document.getElementById('deposit-bank-account').textContent = bank.accountNumber || 'N/A';
-      document.getElementById('deposit-bank-owner').textContent = bank.ownerName || 'N/A';
+      bankInfo = data.settings.bankInfo;
+      updateDepositMemoAndQR();
     }
   } catch (err) {
     console.error(err);
+  }
+}
+
+function updateDepositMemoAndQR() {
+  if (!currentUser || !bankInfo) return;
+
+  const bankName = bankInfo.bankName || 'MBBank';
+  const accountNumber = bankInfo.accountNumber || '';
+  const ownerName = bankInfo.ownerName || '';
+
+  const bankNameEl = document.getElementById('bank-name-display');
+  const bankAccEl = document.getElementById('bank-acc-display');
+  const bankOwnerEl = document.getElementById('bank-owner-display');
+  const bankMemoEl = document.getElementById('bank-memo-display');
+  
+  if (bankNameEl) bankNameEl.textContent = bankName;
+  if (bankAccEl) bankAccEl.textContent = accountNumber;
+  if (bankOwnerEl) bankOwnerEl.textContent = ownerName;
+
+  const amountInput = document.getElementById('bank-amount');
+  const amount = amountInput ? Number(amountInput.value) || 0 : 0;
+
+  const memoText = `NAP ${currentUser.username.toUpperCase()} ${amount}`;
+  if (bankMemoEl) bankMemoEl.textContent = memoText;
+
+  const qrImg = document.getElementById('vietqr-img');
+  if (qrImg) {
+    let qrUrl = bankInfo.qrTemplate || 'https://img.vietqr.io/image/{bankName}-{accountNumber}-compact.jpg?amount={amount}&addInfo={addInfo}';
+    qrUrl = qrUrl
+      .replace('{bankName}', encodeURIComponent(bankName))
+      .replace('{accountNumber}', encodeURIComponent(accountNumber))
+      .replace('{amount}', amount)
+      .replace('{addInfo}', encodeURIComponent(memoText));
+    qrImg.src = qrUrl;
   }
 }
 
@@ -116,11 +191,13 @@ async function loadMyOrders() {
         const names = o.items.map(i => i.name).join(', ');
 
         // Dynamic action buttons
-        let actionsHtml = '';
+        let actionsHtml = `<button onclick="viewOrderDetails('${o._id}')" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 5px;">Xem chi tiết</button>`;
         if (o.orderStatus === 'pending_payment') {
           actionsHtml = `<a href="/order-success.html?orderCode=${o.orderCode}&total=${o.total}&method=${o.paymentMethod}" class="btn btn-cyan" style="padding: 4px 8px; font-size: 0.8rem;">Thanh toán</a>`;
-        } else {
-          actionsHtml = `<button onclick="viewOrderDetails('${o._id}')" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">Xem chi tiết</button>`;
+        } else if (o.orderStatus === 'completed' || o.orderStatus === 'delivering') {
+          actionsHtml += `<button onclick="openComplaintModal('${o._id}', '${o.orderCode}')" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem;">Khiếu nại</button>`;
+        } else if (o.orderStatus === 'dispute') {
+          actionsHtml += `<span class="status-badge dispute" style="cursor: pointer; font-size: 0.8rem; padding: 4px 8px; vertical-align: middle;" onclick="document.querySelector('[data-tab=complaints-tab]').click()" title="Xem trạng thái khiếu nại">Đang khiếu nại</span>`;
         }
 
         tr.innerHTML = `
@@ -191,26 +268,49 @@ async function viewOrderDetails(orderId) {
       o.items.forEach(item => {
         let credsHtml = '';
         if (o.orderStatus === 'completed' && item.loginInfo) {
+          const isDisputed = o.orderStatus === 'dispute';
+          const complaintBtnHtml = isDisputed 
+            ? `<span class="status-badge dispute" style="padding: 4px 8px; font-size: 0.8rem;">Đang khiếu nại</span>`
+            : `<button onclick="openComplaintModal('${o._id}', '${o.orderCode}')" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem;">Khiếu nại 🚨</button>`;
+
           credsHtml = `
-            <div class="login-credentials-reveal">
-              <h5 style="color: var(--accent-cyan); margin-bottom: 8px;">🔑 Thông tin tài khoản:</h5>
-              <table>
-                <tr><td>Tài khoản:</td><td><span class="secret-val">${item.loginInfo.username}</span></td></tr>
-                <tr><td>Mật khẩu:</td><td><span class="secret-val">${item.loginInfo.password}</span></td></tr>
-                <tr><td>Đăng nhập qua:</td><td><strong>${item.loginInfo.loginMethod || 'Mặc định'}</strong></td></tr>
-                ${item.loginInfo.linkedEmail ? `<tr><td>Email liên kết:</td><td>${item.loginInfo.linkedEmail}</td></tr>` : ''}
-                ${item.loginInfo.securityNote ? `<tr><td>Chú ý:</td><td><span style="color: var(--warning);">${item.loginInfo.securityNote}</span></td></tr>` : ''}
-              </table>
-              <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <div class="login-credentials-reveal" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 12px;">
+              <h5 style="color: var(--accent-cyan); margin-bottom: 12px; font-size: 0.95rem;">🔑 Thông tin đăng nhập nick:</h5>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Tài khoản: <strong id="cred-user-${item._id}" style="color: white; font-family: monospace;">${item.loginInfo.username}</strong></span>
+                  <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="copyText('cred-user-${item._id}')">Copy</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Mật khẩu: <input type="password" id="cred-pass-${item._id}" value="${item.loginInfo.password}" readonly style="background:transparent; border:none; color:white; font-family:monospace; font-weight:bold; font-size:1.1rem; width:150px; outline:none;"></span>
+                  <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="togglePasswordVisibility('cred-pass-${item._id}')">Hiện/Ẩn</button>
+                    <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="copyText('cred-pass-${item._id}')">Copy</button>
+                  </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Email liên kết: <strong id="cred-email-${item._id}" style="color: white;">${item.loginInfo.linkedEmail || 'Không có'}</strong></span>
+                  <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" ${item.loginInfo.linkedEmail ? '' : 'disabled'} onclick="copyText('cred-email-${item._id}')">Copy</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                  <span>Chú ý bảo mật:</span>
+                  <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <strong id="cred-note-${item._id}" style="color: var(--warning); font-size: 0.85rem;">${item.loginInfo.securityNote || 'Không có'}</strong>
+                    <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" ${item.loginInfo.securityNote ? '' : 'disabled'} onclick="copyText('cred-note-${item._id}')">Copy</button>
+                  </div>
+                </div>
+              </div>
+              <p style="color: var(--accent-pink); font-size: 0.8rem; font-weight: bold; margin-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">⚠️ Vui lòng đổi mật khẩu ngay sau khi nhận nick.</p>
+              <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
                 <button onclick="openReviewModal('${item.accountId}')" class="btn btn-cyan" style="padding: 4px 8px; font-size: 0.8rem;">Đánh giá nick ★</button>
-                <button onclick="openComplaintModal('${o._id}', '${o.orderCode}')" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem;">Khiếu nại 🚨</button>
+                ${complaintBtnHtml}
               </div>
             </div>
           `;
-        } else if (o.orderStatus !== 'completed') {
+        } else {
           credsHtml = `
             <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem; color: var(--warning); border: 1px dashed var(--warning);">
-              🔒 Thông tin nick game sẽ hiển thị tại đây sau khi đơn hàng hoàn tất.
+              🔒 Thông tin sẽ hiển thị sau khi đơn hoàn thành.
             </div>
           `;
         }
@@ -253,14 +353,30 @@ function closeDetailsModal() {
 // Change password helper
 async function handleChangePassword(e) {
   e.preventDefault();
-  const oldPassword = document.getElementById('oldPassword').value;
+  const currentPassword = document.getElementById('currentPassword').value;
   const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (newPassword.length < 6) {
+    window.showToast('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    window.showToast('Mật khẩu mới và xác nhận mật khẩu không khớp.', 'error');
+    return;
+  }
+
+  if (newPassword === currentPassword) {
+    window.showToast('Mật khẩu mới không được trùng với mật khẩu hiện tại.', 'error');
+    return;
+  }
 
   try {
     const res = await fetch('/api/auth/change-password', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ oldPassword, newPassword })
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
     });
     const data = await res.json();
 
@@ -331,6 +447,16 @@ async function handleComplaintSubmit(e) {
   const title = document.getElementById('complaint-title').value.trim();
   const description = document.getElementById('complaint-desc').value.trim();
   const fileInput = document.getElementById('complaint-evidence');
+
+  if (!title) {
+    window.showToast('Vui lòng chọn lý do khiếu nại.', 'error');
+    return;
+  }
+
+  if (description.length < 20) {
+    window.showToast('Mô tả chi tiết khiếu nại phải có tối thiểu 20 ký tự.', 'error');
+    return;
+  }
 
   const formData = new FormData();
   formData.append('orderId', orderId);
@@ -592,3 +718,258 @@ window.closeReviewModal = closeReviewModal;
 window.openComplaintModal = openComplaintModal;
 window.closeComplaintModal = closeComplaintModal;
 window.removeFromWishlistDashboard = removeFromWishlistDashboard;
+
+// New profile, upload avatar, activate tab from URL and wallet recharge logic
+async function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  try {
+    const res = await fetch('/api/auth/upload-avatar', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.showToast('Tải lên ảnh đại diện thành công.', 'success');
+      const preview = document.getElementById('profile-avatar-preview');
+      const letter = document.getElementById('profile-avatar-letter');
+      if (preview) {
+        preview.src = data.url;
+        preview.style.display = 'block';
+        preview.dataset.uploadedUrl = data.url;
+      }
+      if (letter) letter.style.display = 'none';
+    } else {
+      window.showToast(data.message || 'Lỗi tải ảnh đại diện.', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    window.showToast('Không thể tải ảnh đại diện lên.', 'error');
+  }
+}
+
+async function handleProfileUpdate(e) {
+  e.preventDefault();
+  const fullName = document.getElementById('profile-name').value.trim();
+  const phone = document.getElementById('profile-phone').value.trim();
+  const address = document.getElementById('profile-address').value.trim();
+  
+  const preview = document.getElementById('profile-avatar-preview');
+  const avatar = preview.dataset.uploadedUrl || (currentUser ? currentUser.avatar : '');
+
+  try {
+    const res = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName, phone, address, avatar })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.showToast(data.message, 'success');
+      await loadUserProfile();
+    } else {
+      window.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    window.showToast('Không thể cập nhật thông tin cá nhân.', 'error');
+  }
+}
+
+function activateTabFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const activeTab = urlParams.get('tab');
+  if (activeTab) {
+    let tabId = activeTab;
+    if (!tabId.endsWith('-tab')) tabId += '-tab';
+    const targetItem = document.querySelector(`.dashboard-nav-item[data-tab="${tabId}"]`);
+    if (targetItem) {
+      targetItem.click();
+    }
+  }
+}
+
+function setupWalletRechargeUI() {
+  const btnCard = document.getElementById('btn-subtab-card');
+  const btnBank = document.getElementById('btn-subtab-bank');
+  const cardContent = document.getElementById('subtab-card-content');
+  const bankContent = document.getElementById('subtab-bank-content');
+
+  if (btnCard && btnBank && cardContent && bankContent) {
+    btnCard.onclick = () => {
+      btnCard.classList.remove('btn-outline');
+      btnCard.classList.add('btn-cyan');
+      btnBank.classList.remove('btn-cyan');
+      btnBank.classList.add('btn-outline');
+      cardContent.style.display = 'block';
+      bankContent.style.display = 'none';
+    };
+
+    btnBank.onclick = () => {
+      btnBank.classList.remove('btn-outline');
+      btnBank.classList.add('btn-cyan');
+      btnCard.classList.remove('btn-cyan');
+      btnCard.classList.add('btn-outline');
+      cardContent.style.display = 'none';
+      bankContent.style.display = 'block';
+    };
+  }
+
+  const providerBtns = document.querySelectorAll('.provider-btn');
+  providerBtns.forEach(btn => {
+    btn.onclick = () => {
+      providerBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('card-provider').value = btn.getAttribute('data-provider');
+    };
+  });
+
+  const denomBtns = document.querySelectorAll('.denom-btn');
+  denomBtns.forEach(btn => {
+    btn.onclick = () => {
+      denomBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('card-denomination').value = btn.getAttribute('data-value');
+    };
+  });
+
+  const cardForm = document.getElementById('cardRechargeForm');
+  if (cardForm) {
+    cardForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const provider = document.getElementById('card-provider').value;
+      const denomination = Number(document.getElementById('card-denomination').value);
+      const serial = document.getElementById('card-serial').value.trim();
+      const code = document.getElementById('card-code').value.trim();
+
+      try {
+        const res = await fetch('/api/wallet/recharge-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider, denomination, serial, code })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.showToast(data.message, 'success');
+          cardForm.reset();
+        } else {
+          window.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Không thể gửi yêu cầu nạp thẻ cào.', 'error');
+      }
+    };
+  }
+
+  const bankAmountBtns = document.querySelectorAll('.bank-amount-btn');
+  const bankAmountInput = document.getElementById('bank-amount');
+  bankAmountBtns.forEach(btn => {
+    btn.onclick = () => {
+      bankAmountBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      bankAmountInput.value = btn.getAttribute('data-value');
+      updateDepositMemoAndQR();
+    };
+  });
+
+  if (bankAmountInput) {
+    bankAmountInput.oninput = () => {
+      const currentVal = bankAmountInput.value;
+      bankAmountBtns.forEach(b => {
+        if (b.getAttribute('data-value') === currentVal) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+      updateDepositMemoAndQR();
+    };
+  }
+
+  const bankForm = document.getElementById('bankRechargeForm');
+  if (bankForm) {
+    bankForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const amount = Number(document.getElementById('bank-amount').value);
+      const fileInput = document.getElementById('bank-proof');
+
+      if (!amount || amount <= 0) {
+        window.showToast('Vui lòng chọn hoặc nhập số tiền nạp hợp lệ.', 'error');
+        return;
+      }
+      if (fileInput.files.length === 0) {
+        window.showToast('Vui lòng tải lên ảnh minh chứng chuyển khoản.', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('amount', amount);
+      formData.append('proofImage', fileInput.files[0]);
+
+      try {
+        const res = await fetch('/api/wallet/recharge-bank', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.showToast(data.message, 'success');
+          bankForm.reset();
+          fileInput.value = '';
+          bankAmountBtns.forEach(b => b.classList.remove('active'));
+          const defaultBtn = document.querySelector('.bank-amount-btn[data-value="100000"]');
+          if (defaultBtn) defaultBtn.classList.add('active');
+          bankAmountInput.value = 100000;
+          updateDepositMemoAndQR();
+        } else {
+          window.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Không thể gửi yêu cầu nạp tiền.', 'error');
+      }
+    };
+  }
+
+  initCopyButtons();
+}
+
+function initCopyButtons() {
+  document.querySelectorAll('.btn-copy').forEach(btn => {
+    btn.onclick = () => {
+      const targetId = btn.getAttribute('data-copy-target');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        navigator.clipboard.writeText(targetEl.textContent.trim()).then(() => {
+          window.showToast('Đã copy vào clipboard!', 'success');
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+    };
+  });
+}
+
+window.copyText = function(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    const textVal = el.tagName === 'INPUT' ? el.value : el.textContent;
+    navigator.clipboard.writeText(textVal.trim()).then(() => {
+      window.showToast('Đã copy vào clipboard!', 'success');
+    }).catch(err => {
+      console.error(err);
+    });
+  }
+};
+
+window.togglePasswordVisibility = function(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.type = el.type === 'password' ? 'text' : 'password';
+  }
+};

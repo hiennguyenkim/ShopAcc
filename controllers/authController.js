@@ -141,25 +141,94 @@ const getMe = async (req, res, next) => {
 
 const changePassword = async (req, res, next) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đầy đủ thông tin mật khẩu.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới và xác nhận mật khẩu không khớp.' });
+    }
+
     const user = await User.findById(req.user._id);
 
-    if (!(await bcrypt.compare(oldPassword, user.password))) {
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Mật khẩu cũ không chính xác.' 
+        message: 'Mật khẩu hiện tại không chính xác.' 
+      });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Mật khẩu mới không được trùng với mật khẩu cũ.' 
       });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    await createAuditLog(user._id, 'CHANGE_PASSWORD', 'Thay đổi mật khẩu', req.ip);
+    await createAuditLog(user._id, 'CHANGE_PASSWORD', 'Thay đổi mật khẩu tài khoản', req.ip);
 
     res.status(200).json({
       success: true,
       message: 'Thay đổi mật khẩu thành công.'
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const { fullName, phone, address, avatar } = req.body;
+
+    if (!fullName || !phone) {
+      return res.status(400).json({ success: false, message: 'Họ tên và số điện thoại là bắt buộc.' });
+    }
+
+    const phoneRegex = /^0\d{8,10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có 9-11 chữ số).' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+    }
+
+    user.fullName = fullName;
+    user.phone = phone;
+    if (address !== undefined) user.address = address;
+    if (avatar !== undefined) user.avatar = avatar;
+
+    await user.save();
+
+    await createAuditLog(user._id, 'UPDATE_PROFILE', 'Cập nhật thông tin cá nhân', req.ip);
+
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật thông tin cá nhân thành công.',
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Vui lòng tải lên ảnh đại diện.' });
+    }
+    const url = `/uploads/avatars/${req.file.filename}`;
+    res.status(200).json({ success: true, url });
   } catch (error) {
     next(error);
   }
@@ -201,5 +270,7 @@ module.exports = {
   logout,
   getMe,
   changePassword,
+  updateProfile,
+  uploadAvatar,
   forgotPassword
 };

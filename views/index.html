@@ -179,6 +179,19 @@
     </div>
   </section>
 
+  <!-- Top Depositors Ticker Section -->
+  <section class="section-container">
+    <div class="section-title">
+      <h2>Bảng Xếp Hạng Nạp Tiền</h2>
+      <p>Bảng vinh danh các thành viên nạp tiền hàng đầu</p>
+    </div>
+    <div class="top-depositors-wrapper" id="top-depositors-wrapper">
+      <div class="top-depositors-list" id="top-depositors-list">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
   <!-- Steps Section -->
   <section class="section-container" style="background: rgba(255,255,255,0.02); padding: 50px 20px; border-radius: 16px; border: 1px solid var(--border-color);">
     <div class="section-title">
@@ -255,7 +268,66 @@
       loadCategories();
       loadFeaturedNicks();
       loadFeaturedCollections();
+      loadTopDepositors();
+      
+      // Refresh every 5 minutes
+      setInterval(loadTopDepositors, 5 * 60 * 1000);
     });
+
+    async function loadTopDepositors() {
+      try {
+        const res = await fetch('/api/stats/top-depositors?limit=10');
+        const data = await res.json();
+        const listContainer = document.getElementById('top-depositors-list');
+        if (!listContainer) return;
+        
+        if (data.success && data.depositors.length > 0) {
+          const renderList = (items) => {
+            return items.map(d => {
+              let medal = '';
+              if (d.rank === 1) medal = '🥇';
+              else if (d.rank === 2) medal = '🥈';
+              else if (d.rank === 3) medal = '🥉';
+              else medal = `<span class="depositor-rank">${d.rank}</span>`;
+
+              const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+              const colorIndex = d.name.charCodeAt(0) % colors.length;
+              const avatarColor = colors[colorIndex];
+
+              return `
+                <div class="depositor-item">
+                  <div style="display: flex; align-items: center;">
+                    <div style="width: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">
+                      ${medal}
+                    </div>
+                    <div class="depositor-avatar" style="background-color: ${avatarColor};">${d.avatar}</div>
+                    <strong style="color: white; font-size: 0.95rem;">${d.name}</strong>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="color: var(--accent-cyan); font-weight: bold; font-size: 1rem;">${d.totalDeposited.toLocaleString('vi-VN')}đ</span>
+                    <small style="display: block; color: var(--text-muted); font-size: 0.72rem; margin-top: 2px;">
+                      Nạp lúc: ${new Date(d.lastDepositAt).toLocaleDateString('vi-VN')}
+                    </small>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          };
+
+          const listHtml = renderList(data.depositors);
+          listContainer.innerHTML = listHtml + listHtml;
+
+          const animDuration = Math.max(10, data.depositors.length * 2.5);
+          listContainer.style.animationDuration = `${animDuration}s`;
+        } else {
+          document.getElementById('top-depositors-wrapper').innerHTML = `
+            <p style="text-align: center; color: var(--text-muted); padding: 50px 0;">Chưa có dữ liệu vinh danh.</p>
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to load top depositors:', err);
+      }
+    }
 
     async function loadCategories() {
       try {

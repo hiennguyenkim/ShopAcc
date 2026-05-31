@@ -22,6 +22,60 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-range-7days').addEventListener('click', () => setDateRange(7));
   document.getElementById('btn-range-month').addEventListener('click', () => setDateRange(0, true));
   document.getElementById('btn-range-year').addEventListener('click', () => setDateRange(0, false, true));
+
+  // Logo file change preview
+  const logoInput = document.getElementById('logoUpload');
+  if (logoInput) {
+    logoInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('logo-preview').src = URL.createObjectURL(file);
+      }
+    };
+  }
+  const btnUploadLogo = document.getElementById('btn-upload-logo');
+  if (btnUploadLogo) {
+    btnUploadLogo.onclick = async () => {
+      if (!logoInput || logoInput.files.length === 0) {
+        window.showToast('Vui lòng chọn file logo mới.', 'error');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('logo', logoInput.files[0]);
+
+      try {
+        const res = await fetch('/api/site-settings/upload-logo', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.showToast('Tải lên logo thành công.', 'success');
+          await fetch('/api/site-settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logo: data.url })
+          });
+          
+          document.getElementById('logo-preview').src = data.url;
+          const siteLogo = document.getElementById('site-logo');
+          if (siteLogo) {
+            siteLogo.src = data.url;
+          }
+          document.querySelectorAll('.logo img, img.logo').forEach(img => {
+            img.src = data.url;
+          });
+        } else {
+          window.showToast(data.message || 'Lỗi tải logo.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        window.showToast('Không thể tải logo lên.', 'error');
+      }
+    };
+  }
+
+  setupRechargesSubTabs();
 });
 
 function setupTabs() {
@@ -36,6 +90,10 @@ function setupTabs() {
         tab.classList.remove('active');
       });
       document.getElementById(targetTab).classList.add('active');
+
+      if (targetTab === 'recharges-tab') {
+        loadRechargeRequests();
+      }
     });
   });
 }
@@ -485,6 +543,13 @@ async function loadSiteSettingsForm() {
       document.getElementById('contactEmail').value = s.contactEmail || '';
       document.getElementById('address').value = s.address || '';
       
+      if (s.logo) {
+        document.getElementById('logo-preview').src = s.logo;
+      }
+      document.getElementById('zaloLink').value = s.zaloLink || '';
+      document.getElementById('facebookLink').value = s.facebookLink || '';
+      document.getElementById('tiktokLink').value = s.tiktokLink || '';
+      
       const bank = s.bankInfo;
       document.getElementById('bankName').value = bank.bankName || '';
       document.getElementById('bankAccount').value = bank.accountNumber || '';
@@ -821,6 +886,10 @@ async function handleSiteSettingsSubmit(e) {
   const contactEmail = document.getElementById('contactEmail').value.trim();
   const address = document.getElementById('address').value.trim();
   
+  const zaloLink = document.getElementById('zaloLink').value.trim();
+  const facebookLink = document.getElementById('facebookLink').value.trim();
+  const tiktokLink = document.getElementById('tiktokLink').value.trim();
+
   const bankName = document.getElementById('bankName').value.trim();
   const accountNumber = document.getElementById('bankAccount').value.trim();
   const ownerName = document.getElementById('bankOwner').value.trim();
@@ -831,6 +900,9 @@ async function handleSiteSettingsSubmit(e) {
     contactPhone,
     contactEmail,
     address,
+    zaloLink,
+    facebookLink,
+    tiktokLink,
     bankInfo: { bankName, accountNumber, ownerName }
   };
 
@@ -870,3 +942,179 @@ window.openCollectionModal = openCollectionModal;
 window.closeCollectionModal = closeCollectionModal;
 window.openCouponModal = openCouponModal;
 window.closeCouponModal = closeCouponModal;
+
+// Recharges Approve/Reject logic
+let currentRechargeSubTab = 'card';
+
+function setupRechargesSubTabs() {
+  const btnCard = document.getElementById('btn-recharge-tab-card');
+  const btnBank = document.getElementById('btn-recharge-tab-bank');
+  const cardView = document.getElementById('recharge-card-admin-view');
+  const bankView = document.getElementById('recharge-bank-admin-view');
+
+  if (btnCard && btnBank && cardView && bankView) {
+    btnCard.onclick = () => {
+      btnCard.classList.remove('btn-outline');
+      btnCard.classList.add('btn-cyan');
+      btnBank.classList.remove('btn-cyan');
+      btnBank.classList.add('btn-outline');
+      cardView.style.display = 'block';
+      bankView.style.display = 'none';
+      currentRechargeSubTab = 'card';
+      loadRechargeRequests();
+    };
+
+    btnBank.onclick = () => {
+      btnBank.classList.remove('btn-outline');
+      btnBank.classList.add('btn-cyan');
+      btnCard.classList.remove('btn-cyan');
+      btnCard.classList.add('btn-outline');
+      cardView.style.display = 'none';
+      bankView.style.display = 'block';
+      currentRechargeSubTab = 'bank';
+      loadRechargeRequests();
+    };
+  }
+}
+
+async function loadRechargeRequests() {
+  try {
+    if (currentRechargeSubTab === 'card') {
+      const tbody = document.getElementById('admin-cards-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Đang tải danh sách thẻ cào...</td></tr>';
+      
+      const res = await fetch('/api/wallet/admin/cards');
+      const data = await res.json();
+      
+      if (data.success && data.recharges.length > 0) {
+        tbody.innerHTML = '';
+        data.recharges.forEach(r => {
+          const tr = document.createElement('tr');
+          const time = new Date(r.createdAt).toLocaleString('vi-VN');
+          const username = r.user ? `${r.user.fullName} (@${r.user.username})` : 'N/A';
+          
+          let actionsHtml = '';
+          if (r.status === 'pending') {
+            actionsHtml = `
+              <button onclick="processCardRechargeAdmin('${r._id}', 'approved')" class="btn btn-cyan" style="padding: 4px 8px; font-size: 0.8rem;">Duyệt</button>
+              <button onclick="processCardRechargeAdmin('${r._id}', 'rejected')" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;">Từ chối</button>
+              <button onclick="processCardRechargeAdmin('${r._id}', 'duplicate')" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;">Trùng</button>
+            `;
+          } else {
+            actionsHtml = `<span style="color: var(--text-muted); font-size: 0.85rem;">Đã xử lý bởi ${r.processedBy ? r.processedBy.username : 'QTV'}</span>`;
+          }
+
+          tr.innerHTML = `
+            <td style="font-size: 0.85rem; color: var(--text-muted);">${time}</td>
+            <td><strong>${username}</strong></td>
+            <td><span class="status-badge pending">${r.provider.toUpperCase()}</span></td>
+            <td style="font-weight: bold; color: white;">${r.denomination.toLocaleString('vi-VN')}đ</td>
+            <td style="font-family: monospace;">${r.serial}</td>
+            <td style="font-family: monospace;">${r.code}</td>
+            <td><span class="status-badge ${r.status}">${r.status}</span></td>
+            <td>${actionsHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Không có yêu cầu nạp thẻ cào nào.</td></tr>';
+      }
+    } else {
+      const tbody = document.getElementById('admin-banks-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Đang tải danh sách chuyển khoản...</td></tr>';
+      
+      const res = await fetch('/api/wallet/admin/banks');
+      const data = await res.json();
+      
+      if (data.success && data.recharges.length > 0) {
+        tbody.innerHTML = '';
+        data.recharges.forEach(r => {
+          const tr = document.createElement('tr');
+          const time = new Date(r.createdAt).toLocaleString('vi-VN');
+          const username = r.user ? `${r.user.fullName} (@${r.user.username})` : 'N/A';
+          
+          let actionsHtml = '';
+          if (r.status === 'pending') {
+            actionsHtml = `
+              <button onclick="processBankRechargeAdmin('${r._id}', 'approved')" class="btn btn-cyan" style="padding: 4px 8px; font-size: 0.8rem;">Duyệt</button>
+              <button onclick="processBankRechargeAdmin('${r._id}', 'rejected')" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;">Từ chối</button>
+            `;
+          } else {
+            actionsHtml = `<span style="color: var(--text-muted); font-size: 0.85rem;">Đã xử lý bởi ${r.processedBy ? r.processedBy.username : 'QTV'}</span>`;
+          }
+
+          tr.innerHTML = `
+            <td style="font-size: 0.85rem; color: var(--text-muted);">${time}</td>
+            <td><strong>${username}</strong></td>
+            <td style="font-weight: bold; color: white;">${r.amount.toLocaleString('vi-VN')}đ</td>
+            <td>
+              <a href="${r.proofImage}" target="_blank">
+                <img src="${r.proofImage}" style="max-height: 50px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" alt="Bill bill">
+              </a>
+            </td>
+            <td><span class="status-badge ${r.status}">${r.status}</span></td>
+            <td>${actionsHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Không có yêu cầu nạp chuyển khoản nào.</td></tr>';
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function processCardRechargeAdmin(id, action) {
+  let reason = '';
+  if (action === 'rejected' || action === 'duplicate') {
+    reason = window.prompt('Nhập lý do từ chối / trùng lặp (không bắt buộc):') || '';
+  }
+
+  try {
+    const res = await fetch(`/api/wallet/admin/card/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, reason })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.showToast(data.message, 'success');
+      loadRechargeRequests();
+      loadAuditLogs();
+    } else {
+      window.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function processBankRechargeAdmin(id, action) {
+  let note = '';
+  if (action === 'rejected') {
+    note = window.prompt('Nhập lý do từ chối (không bắt buộc):') || '';
+  }
+
+  try {
+    const res = await fetch(`/api/wallet/admin/bank/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, note })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.showToast(data.message, 'success');
+      loadRechargeRequests();
+      loadAuditLogs();
+    } else {
+      window.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+window.processCardRechargeAdmin = processCardRechargeAdmin;
+window.processBankRechargeAdmin = processBankRechargeAdmin;

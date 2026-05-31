@@ -48,6 +48,7 @@
         <div class="dashboard-nav-item" data-tab="nicks-tab">🎮 Quản lý nick game</div>
         <div class="dashboard-nav-item" data-tab="categories-tab">📁 Danh mục & BST</div>
         <div class="dashboard-nav-item" data-tab="users-tab">👥 Tài khoản & Ví</div>
+        <div class="dashboard-nav-item" data-tab="recharges-tab">💳 Duyệt nạp tiền</div>
         <div class="dashboard-nav-item" data-tab="coupons-tab">🎫 Mã giảm giá</div>
         <div class="dashboard-nav-item" data-tab="settings-tab">⚙️ Cài đặt trang chủ</div>
         <div class="dashboard-nav-item" data-tab="audit-tab">📜 Nhật ký hoạt động</div>
@@ -240,6 +241,18 @@
         <h2 class="tab-pane-title">Cấu Hình Trang Chủ & Thanh Toán</h2>
         <div class="glass" style="padding: 30px;">
           <form id="siteSettingsForm">
+            <!-- Logo configurations -->
+            <h3 style="color: var(--accent-cyan); margin-bottom: 15px; font-weight: 600;">Logo Website</h3>
+            <div class="form-group" style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
+              <div style="width: 100px; height: 100px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; background: #1a1c23; overflow: hidden;">
+                <img id="logo-preview" src="/images/logo.png" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              </div>
+              <div>
+                <input type="file" id="logoUpload" accept="image/*" class="form-control" style="margin-bottom: 10px; width: auto;">
+                <button type="button" id="btn-upload-logo" class="btn btn-cyan" style="padding: 6px 15px; font-size: 0.85rem;">Cập nhật logo 📷</button>
+              </div>
+            </div>
+
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
                 <label for="bannerTitle">Tiêu đề Banner</label>
@@ -263,6 +276,22 @@
               <div>
                 <label for="address">Văn phòng đại diện</label>
                 <input type="text" id="address" class="form-control" required>
+              </div>
+            </div>
+
+            <h3 style="color: var(--accent-cyan); margin: 30px 0 15px; font-weight: 600;">Liên Kết Mạng Xã Hội (Widget Chat)</h3>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+              <div>
+                <label for="zaloLink">Link Zalo Chat</label>
+                <input type="text" id="zaloLink" class="form-control" placeholder="https://zalo.me/...">
+              </div>
+              <div>
+                <label for="facebookLink">Link Messenger</label>
+                <input type="text" id="facebookLink" class="form-control" placeholder="https://m.me/...">
+              </div>
+              <div>
+                <label for="tiktokLink">Link TikTok</label>
+                <input type="text" id="tiktokLink" class="form-control" placeholder="https://tiktok.com/@...">
               </div>
             </div>
 
@@ -306,6 +335,61 @@
             </thead>
             <tbody id="admin-audit-tbody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Tab 8: Approve/Reject wallet recharges -->
+      <section id="recharges-tab" class="dashboard-tab-content">
+        <h2 class="tab-pane-title">Duyệt Nạp Tiền Vào Ví</h2>
+        
+        <!-- Tab inner headers -->
+        <div style="display: flex; gap: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px;">
+          <button type="button" id="btn-recharge-tab-card" class="btn btn-cyan" style="flex: 1; border-radius: 6px;">Nạp qua thẻ cào (Chờ duyệt) 📱</button>
+          <button type="button" id="btn-recharge-tab-bank" class="btn btn-outline" style="flex: 1; border-radius: 6px;">Nạp qua chuyển khoản (Chờ duyệt) 🏦</button>
+        </div>
+
+        <!-- Recharge Card Content Table -->
+        <div id="recharge-card-admin-view">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Khách hàng</th>
+                  <th>Nhà mạng</th>
+                  <th>Mệnh giá</th>
+                  <th>Serial</th>
+                  <th>Mã thẻ</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="admin-cards-tbody">
+                <tr><td colspan="8" style="text-align: center;">Đang tải danh sách thẻ cào...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recharge Bank Content Table -->
+        <div id="recharge-bank-admin-view" style="display: none;">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Khách hàng</th>
+                  <th>Số tiền</th>
+                  <th>Bill thanh toán</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="admin-banks-tbody">
+                <tr><td colspan="6" style="text-align: center;">Đang tải danh sách chuyển khoản...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

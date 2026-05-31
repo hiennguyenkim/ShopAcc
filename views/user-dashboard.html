@@ -56,7 +56,7 @@
         <div class="dashboard-nav-item" data-tab="complaints-tab">⚠️ Khiếu nại của tôi</div>
         <div class="dashboard-nav-item" data-tab="wishlist-tab">❤️ Sản phẩm yêu thích</div>
         <div class="dashboard-nav-item" data-tab="chat-tab">💬 Chat với CSKH</div>
-        <div class="dashboard-nav-item" data-tab="profile-tab">🔐 Đổi mật khẩu</div>
+        <div class="dashboard-nav-item" data-tab="profile-tab">👤 Thông tin cá nhân</div>
       </div>
     </aside>
 
@@ -89,15 +89,115 @@
       <section id="deposit-tab" class="dashboard-tab-content">
         <h2 class="tab-pane-title">Nạp Tiền Vào Ví</h2>
         <div class="glass" style="padding: 30px;">
-          <h3 style="color: var(--accent-cyan); margin-bottom: 15px;">Thông tin nạp tiền ví</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Vui lòng chuyển khoản ngân hàng với thông tin dưới đây. Khi chuyển tiền thành công, số dư của bạn sẽ được cộng tự động hoặc liên hệ hotline để kiểm tra nhanh nhất.</p>
-
-          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px;">
-            <p style="margin-bottom: 10px;">Ngân hàng: <strong id="deposit-bank-name" style="color: white;">Đang tải...</strong></p>
-            <p style="margin-bottom: 10px;">Số tài khoản: <strong id="deposit-bank-account" style="color: white; font-family: monospace;">Đang tải...</strong></p>
-            <p style="margin-bottom: 10px;">Chủ tài khoản: <strong id="deposit-bank-owner" style="color: white;">Đang tải...</strong></p>
-            <p style="margin-bottom: 10px;">Nội dung chuyển khoản (Bắt buộc): <strong id="deposit-memo" style="color: var(--accent-pink); font-family: monospace;">NAP <TÊN ĐĂNG NHẬP></strong></p>
+          <!-- Sub-tabs navigation buttons -->
+          <div style="display: flex; gap: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px;">
+            <button type="button" id="btn-subtab-card" class="btn btn-cyan" style="flex: 1; border-radius: 6px;">Nạp qua thẻ cào 📱</button>
+            <button type="button" id="btn-subtab-bank" class="btn btn-outline" style="flex: 1; border-radius: 6px;">Nạp qua chuyển khoản ngân hàng 🏦</button>
           </div>
+
+          <!-- Subtab 1: Card Recharge -->
+          <div id="subtab-card-content">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 15px;">Nạp thẻ cào tự động</h3>
+            <form id="cardRechargeForm">
+              <!-- Select provider card -->
+              <div class="form-group">
+                <label>Chọn nhà mạng</label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+                  <button type="button" class="btn btn-outline provider-btn active" data-provider="viettel" style="padding: 10px 5px; font-size: 0.85rem;">Viettel</button>
+                  <button type="button" class="btn btn-outline provider-btn" data-provider="mobifone" style="padding: 10px 5px; font-size: 0.85rem;">Mobifone</button>
+                  <button type="button" class="btn btn-outline provider-btn" data-provider="vinaphone" style="padding: 10px 5px; font-size: 0.85rem;">Vinaphone</button>
+                  <button type="button" class="btn btn-outline provider-btn" data-provider="vietnamobile" style="padding: 10px 5px; font-size: 0.85rem;">Vnmobile</button>
+                </div>
+                <input type="hidden" id="card-provider" value="viettel">
+              </div>
+
+              <!-- Select denomination card -->
+              <div class="form-group">
+                <label>Chọn mệnh giá thẻ</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;" id="denom-grid">
+                  <button type="button" class="btn btn-outline denom-btn" data-value="10000">10,000đ</button>
+                  <button type="button" class="btn btn-outline denom-btn" data-value="20000">20,000đ</button>
+                  <button type="button" class="btn btn-outline denom-btn active" data-value="50000">50,000đ</button>
+                  <button type="button" class="btn btn-outline denom-btn" data-value="100000">100,000đ</button>
+                  <button type="button" class="btn btn-outline denom-btn" data-value="200000">200,000đ</button>
+                  <button type="button" class="btn btn-outline denom-btn" data-value="500000">500,000đ</button>
+                </div>
+                <input type="hidden" id="card-denomination" value="50000">
+              </div>
+
+              <div class="form-group">
+                <label for="card-serial">Số Serial</label>
+                <input type="text" id="card-serial" class="form-control" required placeholder="Nhập mã serial của thẻ...">
+              </div>
+              <div class="form-group">
+                <label for="card-code">Mã nạp thẻ (Mã PIN)</label>
+                <input type="text" id="card-code" class="form-control" required placeholder="Nhập mã nạp thẻ...">
+              </div>
+
+              <button type="submit" class="btn btn-cyan" style="width: 100%; margin-top: 15px;">Nạp Thẻ Ngay 🚀</button>
+            </form>
+          </div>
+
+          <!-- Subtab 2: Bank Recharge -->
+          <div id="subtab-bank-content" style="display: none;">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 15px;">Chuyển khoản Ngân Hàng</h3>
+            
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px;">
+              <!-- Left side: forms/QR details -->
+              <div>
+                <div class="form-group">
+                  <label for="bank-amount">Số tiền muốn nạp (đ)</label>
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px;">
+                    <button type="button" class="btn btn-outline bank-amount-btn" data-value="50000">50k</button>
+                    <button type="button" class="btn btn-outline bank-amount-btn active" data-value="100000">100k</button>
+                    <button type="button" class="btn btn-outline bank-amount-btn" data-value="200000">200k</button>
+                    <button type="button" class="btn btn-outline bank-amount-btn" data-value="500000">500k</button>
+                    <button type="button" class="btn btn-outline bank-amount-btn" data-value="1000000">1M</button>
+                    <button type="button" class="btn btn-outline bank-amount-btn" data-value="2000000">2M</button>
+                  </div>
+                  <input type="number" id="bank-amount" class="form-control" value="100000" min="10000" placeholder="Hoặc tự nhập số tiền...">
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Ngân hàng: <strong id="bank-name-display" style="color: white;">MBBank</strong></span>
+                    <button type="button" class="btn btn-outline btn-copy" data-copy-target="bank-name-display" style="padding: 2px 6px; font-size: 0.75rem;">Copy</button>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Số tài khoản: <strong id="bank-acc-display" style="color: white; font-family: monospace;">Đang tải...</strong></span>
+                    <button type="button" class="btn btn-outline btn-copy" data-copy-target="bank-acc-display" style="padding: 2px 6px; font-size: 0.75rem;">Copy</button>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Chủ tài khoản: <strong id="bank-owner-display" style="color: white;">Đang tải...</strong></span>
+                    <button type="button" class="btn btn-outline btn-copy" data-copy-target="bank-owner-display" style="padding: 2px 6px; font-size: 0.75rem;">Copy</button>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Nội dung CK: <strong id="bank-memo-display" style="color: var(--accent-pink); font-family: monospace;">NAP ...</strong></span>
+                    <button type="button" class="btn btn-outline btn-copy" data-copy-target="bank-memo-display" style="padding: 2px 6px; font-size: 0.75rem;">Copy</button>
+                  </div>
+                </div>
+
+                <form id="bankRechargeForm">
+                  <div class="form-group">
+                    <label for="bank-proof">Upload hóa đơn / bill chuyển khoản *</label>
+                    <input type="file" id="bank-proof" class="form-control" required accept="image/*">
+                  </div>
+                  <button type="submit" class="btn btn-cyan" style="width: 100%;">Xác Nhận Đã Chuyển Khoản ✔</button>
+                </form>
+              </div>
+
+              <!-- Right side: VietQR preview -->
+              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 1px solid var(--border-color); padding-left: 20px;">
+                <h4 style="margin-bottom: 15px; font-size: 0.95rem; color: var(--text-muted);">Quét mã QR để chuyển khoản nhanh</h4>
+                <div style="width: 200px; height: 200px; background: white; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-color);">
+                  <img id="vietqr-img" src="" alt="Mã QR VietQR" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
+                <small style="color: var(--text-muted); text-align: center; margin-top: 10px; font-size: 0.75rem;">Mã QR tự động điền số tiền và nội dung chuyển khoản.</small>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
@@ -124,23 +224,61 @@
         </div>
       </section>
 
-      <!-- Tab 4: Profile / Change Password -->
+      <!-- Tab 4: Profile & Password -->
       <section id="profile-tab" class="dashboard-tab-content">
-        <h2 class="tab-pane-title">Thay Đổi Mật Khẩu</h2>
-        <div class="glass" style="padding: 30px; max-width: 500px;">
-          <form id="changePasswordForm">
-            <div class="form-group">
-              <label for="oldPassword">Mật khẩu cũ</label>
-              <input type="password" id="oldPassword" class="form-control" required placeholder="Nhập mật khẩu cũ">
-            </div>
-            <div class="form-group">
-              <label for="newPassword">Mật khẩu mới</label>
-              <input type="password" id="newPassword" class="form-control" required placeholder="Tối thiểu 6 ký tự">
-            </div>
-            <button type="submit" class="btn btn-cyan" style="width: 100%; margin-top: 15px;">
-              Cập nhật mật khẩu 🔐
-            </button>
-          </form>
+        <h2 class="tab-pane-title">Thông Tin Cá Nhân</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+          <!-- Basic Info Form -->
+          <div class="glass" style="padding: 30px;">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 20px;">Thông tin cơ bản</h3>
+            <form id="profileForm">
+              <div class="form-group" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <div style="position: relative; width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--border-color); overflow: hidden; background: #1a1c23; display:flex; align-items:center; justify-content:center; font-size:2.5rem; font-weight:bold; color:var(--accent-cyan);">
+                  <img id="profile-avatar-preview" src="/images/default-avatar.png" style="width: 100%; height: 100%; object-fit: cover; display:none;">
+                  <span id="profile-avatar-letter">U</span>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem;" onclick="document.getElementById('avatarUpload').click()">Chọn ảnh đại diện 📷</button>
+              </div>
+              <div class="form-group">
+                <label for="profile-name">Họ và tên *</label>
+                <input type="text" id="profile-name" class="form-control" required placeholder="Nhập họ tên...">
+              </div>
+              <div class="form-group">
+                <label for="profile-phone">Số điện thoại *</label>
+                <input type="tel" id="profile-phone" class="form-control" required placeholder="Nhập số điện thoại...">
+              </div>
+              <div class="form-group">
+                <label for="profile-email">Email đăng nhập (Không thể sửa)</label>
+                <input type="email" id="profile-email" class="form-control" readonly style="opacity: 0.6; cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label for="profile-address">Địa chỉ</label>
+                <input type="text" id="profile-address" class="form-control" placeholder="Nhập địa chỉ của bạn...">
+              </div>
+              <button type="submit" class="btn btn-cyan" style="width: 100%; margin-top: 15px;">Cập nhật thông tin 👤</button>
+            </form>
+          </div>
+
+          <!-- Password Form -->
+          <div class="glass" style="padding: 30px;">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 20px;">Đổi mật khẩu</h3>
+            <form id="changePasswordForm">
+              <div class="form-group">
+                <label for="currentPassword">Mật khẩu hiện tại</label>
+                <input type="password" id="currentPassword" class="form-control" required placeholder="Nhập mật khẩu hiện tại">
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Mật khẩu mới</label>
+                <input type="password" id="newPassword" class="form-control" required placeholder="Tối thiểu 6 ký tự">
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                <input type="password" id="confirmPassword" class="form-control" required placeholder="Nhập lại mật khẩu mới">
+              </div>
+              <button type="submit" class="btn btn-purple" style="width: 100%; margin-top: 15px;">Đổi mật khẩu 🔐</button>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -186,7 +324,13 @@
         </div>
         <div class="form-group">
           <label for="complaint-title">Vấn đề khiếu nại</label>
-          <input type="text" id="complaint-title" class="form-control" required placeholder="Ví dụ: Nick không đăng nhập được, Sai mật khẩu...">
+          <select id="complaint-title" class="form-control" required>
+            <option value="">-- Chọn lý do khiếu nại --</option>
+            <option value="Nick bị khóa/sai thông tin">Nick bị khóa/sai thông tin</option>
+            <option value="Nick không đúng mô tả">Nick không đúng mô tả</option>
+            <option value="Chưa nhận được nick">Chưa nhận được nick</option>
+            <option value="Khác">Khác</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="complaint-desc">Mô tả chi tiết</label>

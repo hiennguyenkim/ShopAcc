@@ -147,8 +147,44 @@ const getByCategory = async (req, res, next) => {
   }
 };
 
+// GET /api/stats/top-depositors
+const getTopDepositors = async (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const depositors = await User.find({ role: 'user', totalDeposited: { $gt: 0 } })
+      .sort({ totalDeposited: -1 })
+      .limit(limit);
+
+    const result = depositors.map((d, index) => {
+      let maskedName = 'Khách Hàng';
+      if (d.fullName) {
+        const parts = d.fullName.trim().split(/\s+/);
+        const first = parts[0];
+        const maskedFirst = first.substring(0, 3) + '***';
+        const rest = parts.slice(1).join(' ');
+        maskedName = rest ? `${maskedFirst} ${rest}` : maskedFirst;
+      }
+      return {
+        rank: index + 1,
+        name: maskedName,
+        avatar: d.fullName ? d.fullName.charAt(0).toUpperCase() : 'U',
+        totalDeposited: d.totalDeposited,
+        lastDepositAt: d.lastDepositAt || d.updatedAt
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      depositors: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getOverview,
   getRevenueChart,
-  getByCategory
+  getByCategory,
+  getTopDepositors
 };

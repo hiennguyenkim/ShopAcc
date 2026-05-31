@@ -22,6 +22,22 @@ const createComplaint = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Bạn không thể khiếu nại đơn hàng của người khác.' });
     }
 
+    // Only completed or delivering orders can be complained
+    if (order.orderStatus !== 'completed' && order.orderStatus !== 'delivering') {
+      return res.status(400).json({ success: false, message: 'Chỉ có thể khiếu nại các đơn hàng đã hoàn thành hoặc đang bàn giao.' });
+    }
+
+    // Prevent duplicate complaints on the same order
+    const existingComplaint = await Complaint.findOne({ order: orderId });
+    if (existingComplaint) {
+      return res.status(400).json({ success: false, message: 'Đơn hàng này đã được gửi khiếu nại trước đó.' });
+    }
+
+    // Description must be at least 20 characters
+    if (description.trim().length < 20) {
+      return res.status(400).json({ success: false, message: 'Mô tả chi tiết khiếu nại phải có tối thiểu 20 ký tự.' });
+    }
+
     const evidenceImages = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
